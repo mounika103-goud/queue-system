@@ -18,13 +18,18 @@ from django.contrib import admin
 from django.urls import path, include
 from queueapp import views
 from django.contrib.auth import views as auth_views
-from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Authentication URLs
     path('accounts/login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login_short'),  # Shortcut login URL
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('accounts/register/', views.register, name='register'),
+    path('accounts/signup/', views.register, name='signup'),  # Alias for register
     path('logout/', auth_views.LogoutView.as_view(), name='logout_short'),  # Shortcut logout URL
-    path('accounts/signup/', TemplateView.as_view(template_name='signup.html'), name='signup'),
+    
+    # App URLs
     path('', include('queueapp.urls')),
 ]

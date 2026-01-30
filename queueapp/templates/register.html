@@ -48,7 +48,7 @@
         </div>
 
         <!-- Form Container -->
-        <form id="registrationForm" method="post" class="registration-form" novalidate>
+        <form id="registrationForm" method="post" action="{% url 'signup' %}" class="registration-form" novalidate>
             {% csrf_token %}
 
             <!-- STEP 1: PERSONAL DETAILS -->

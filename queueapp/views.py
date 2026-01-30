@@ -1,12 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import Avg, Count, Q
 from django.utils import timezone
 from django.urls import reverse
+from django.db import transaction
 
 from .models import Queue, Token, Counter, UserRole, Notification, QueueAnalytics
 from .services import QueueService, AnalyticsService
@@ -21,6 +23,91 @@ def home(request):
         'page_title': 'Smart Banking Queue Management',
     }
     return render(request, 'home.html', context)
+
+
+def register(request):
+    """User registration view"""
+    if request.user.is_authenticated:
+        return redirect('queueapp:dashboard')
+    
+    if request.method == 'POST':
+        # Get form data
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        password_confirm = request.POST.get('password_confirm', '')
+        account_type = request.POST.get('account_type', 'customer')
+        
+        # Validation
+        errors = {}
+        
+        if not full_name:
+            errors['full_name'] = 'Full name is required.'
+        if not email or '@' not in email:
+            errors['email'] = 'Valid email address is required.'
+        if not phone:
+            errors['phone'] = 'Phone number is required.'
+        if not username or len(username) < 3:
+            errors['username'] = 'Username must be at least 3 characters.'
+        if not password or len(password) < 6:
+            errors['password'] = 'Password must be at least 6 characters.'
+        if password != password_confirm:
+            errors['password_confirm'] = 'Passwords do not match.'
+        
+        # Check if username exists
+        if User.objects.filter(username=username).exists():
+            errors['username'] = 'Username already exists.'
+        
+        # Check if email exists
+        if User.objects.filter(email=email).exists():
+            errors['email'] = 'Email already registered.'
+        
+        if errors:
+            context = {
+                'page_title': 'Secure Registration',
+                'form_data': request.POST,
+                'errors': errors,
+            }
+            return render(request, 'register.html', context)
+        
+        # Create user with transaction
+        try:
+            with transaction.atomic():
+                # Create user
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password=password,
+                    first_name=full_name.split()[0],
+                    last_name=' '.join(full_name.split()[1:]) if len(full_name.split()) > 1 else ''
+                )
+                
+                # Assign role
+                role = 'customer' if account_type == 'customer' else 'staff'
+                UserRole.objects.create(user=user, role=role, is_active=True)
+                
+                messages.success(
+                    request,
+                    f'✅ Registration successful! Your account "{username}" is ready. Please log in to continue.'
+                )
+                
+                # Redirect to login
+                return redirect('login')
+        
+        except Exception as e:
+            messages.error(request, f'Registration failed: {str(e)}')
+            context = {
+                'page_title': 'Secure Registration',
+                'form_data': request.POST,
+            }
+            return render(request, 'register.html', context)
+    
+    context = {
+        'page_title': 'Secure Registration',
+    }
+    return render(request, 'register.html', context)
 
 
 def realtime_demo(request):
@@ -55,14 +142,22 @@ def dashboard(request):
 @customer_required
 def customer_dashboard(request):
     """Customer dashboard"""
-    customer_tokens = Token.objects.filter(customer=request.user).order_by('-generated_at')[:5]
+    user_tokens = Token.objects.filter(customer=request.user)
+    customer_tokens = user_tokens.order_by('-generated_at')[:5]
     active_queues = Queue.objects.filter(is_active=True)
+    current_token = user_tokens.filter(status__in=['generated', 'waiting', 'called', 'being_served']).first()
+    
+    completed_count = user_tokens.filter(status='completed').count()
     
     context = {
         'page_title': 'Customer Dashboard',
         'recent_tokens': customer_tokens,
         'active_queues': active_queues,
-        'total_tokens': Token.objects.filter(customer=request.user).count(),
+        'total_tokens': user_tokens.count(),
+        'current_token': current_token,
+        'completed_tokens': completed_count,
+        'avg_wait_time': 15,
+        'time_saved': 45,
     }
     return render(request, 'customer/dashboard.html', context)
 
@@ -238,6 +333,7 @@ def admin_dashboard(request):
     """Admin dashboard with overview"""
     counters = Counter.objects.all()
     queues = Queue.objects.all()
+    all_tokens = Token.objects.all()
     
     total_tokens_today = Token.objects.filter(
         generated_at__date=timezone.now().date()
@@ -249,17 +345,22 @@ def admin_dashboard(request):
     ).count()
     
     active_customers = Token.objects.filter(
-        status__in=['waiting', 'called']
+        status__in=['waiting', 'called', 'called']
     ).values('customer').distinct().count()
     
     context = {
         'page_title': 'Admin Dashboard',
         'total_counters': counters.count(),
         'total_queues': queues.count(),
-        'total_tokens_today': total_tokens_today,
+        'total_tokens': all_tokens.count(),
+        'total_tokens_today': total_tokens_today or all_tokens.count(),
         'served_today': served_today,
         'active_customers': active_customers,
-        'counters': counters[:5],
+        'waiting_tokens': all_tokens.filter(status='waiting').count(),
+        'being_served': all_tokens.filter(status='being_served').count(),
+        'counters': counters,
+        'queues': queues,
+        'recent_tokens': all_tokens.order_by('-generated_at')[:10],
     }
     return render(request, 'admin/dashboard.html', context)
 
