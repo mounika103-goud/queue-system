@@ -1,0 +1,646 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Secure Registration - Smart Banking Queue System{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/registration.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="registration-container">
+    <!-- Header Section -->
+    <div class="registration-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">🏦</div>
+                <h1>Smart Banking System</h1>
+            </div>
+            <p class="header-subtitle">Secure Registration - Enterprise-Grade Platform</p>
+        </div>
+    </div>
+
+    <!-- Main Registration Card -->
+    <div class="registration-card">
+        <!-- Progress Indicator -->
+        <div class="progress-section">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="steps-indicator">
+                <div class="step step-active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Personal Details</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Bank Details</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Identity & Security</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Role & Confirm</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Container -->
+        <form id="registrationForm" method="post" class="registration-form" novalidate>
+            {% csrf_token %}
+
+            <!-- STEP 1: PERSONAL DETAILS -->
+            <div class="form-step active" data-step="1">
+                <div class="step-header">
+                    <h2>Personal Details</h2>
+                    <p>Create your account with basic information</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="fullName">
+                        Full Name
+                        <span class="required">*</span>
+                        <span class="tooltip-icon" title="Enter your full name as per official documents">?</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="fullName" 
+                        name="full_name" 
+                        placeholder="John Doe"
+                        class="form-control"
+                        required
+                        data-validation="name"
+                    >
+                    <div class="validation-message"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">
+                            Email Address
+                            <span class="required">*</span>
+                            <span class="tooltip-icon" title="We'll use this to verify your account">?</span>
+                        </label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="john.doe@example.com"
+                            class="form-control"
+                            required
+                            data-validation="email"
+                        >
+                        <div class="validation-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">
+                            Phone Number
+                            <span class="required">*</span>
+                            <span class="tooltip-icon" title="Used for OTP verification and notifications">?</span>
+                        </label>
+                        <div class="phone-input-group">
+                            <select id="countryCode" name="country_code" class="country-select">
+                                <option value="+91">🇮🇳 +91 (India)</option>
+                                <option value="+1">🇺🇸 +1 (USA)</option>
+                                <option value="+44">🇬🇧 +44 (UK)</option>
+                                <option value="+86">🇨🇳 +86 (China)</option>
+                                <option value="+81">🇯🇵 +81 (Japan)</option>
+                            </select>
+                            <input 
+                                type="tel" 
+                                id="phone" 
+                                name="phone_number" 
+                                placeholder="9876543210"
+                                class="form-control"
+                                required
+                                data-validation="phone"
+                                maxlength="15"
+                            >
+                        </div>
+                        <div class="validation-message"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        Password
+                        <span class="required">*</span>
+                        <span class="tooltip-icon" title="Minimum 8 characters with uppercase, numbers, and special characters">?</span>
+                    </label>
+                    <div class="password-input-group">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="Enter secure password"
+                            class="form-control"
+                            required
+                            data-validation="password"
+                        >
+                        <button type="button" class="toggle-password" data-target="password">
+                            <span class="eye-icon">👁️</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Password Strength Indicator -->
+                    <div class="password-strength">
+                        <div class="strength-bar">
+                            <div class="strength-progress" id="strengthProgress"></div>
+                        </div>
+                        <div class="strength-label" id="strengthLabel">Password strength: <strong>Weak</strong></div>
+                        <div class="strength-requirements">
+                            <div class="requirement" data-requirement="length">
+                                <span class="requirement-icon">✗</span> At least 8 characters
+                            </div>
+                            <div class="requirement" data-requirement="uppercase">
+                                <span class="requirement-icon">✗</span> One uppercase letter (A-Z)
+                            </div>
+                            <div class="requirement" data-requirement="lowercase">
+                                <span class="requirement-icon">✗</span> One lowercase letter (a-z)
+                            </div>
+                            <div class="requirement" data-requirement="number">
+                                <span class="requirement-icon">✗</span> One number (0-9)
+                            </div>
+                            <div class="requirement" data-requirement="special">
+                                <span class="requirement-icon">✗</span> One special character (!@#$%)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="validation-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">
+                        Confirm Password
+                        <span class="required">*</span>
+                    </label>
+                    <div class="password-input-group">
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirm_password" 
+                            placeholder="Re-enter password"
+                            class="form-control"
+                            required
+                            data-validation="confirmPassword"
+                        >
+                        <button type="button" class="toggle-password" data-target="confirmPassword">
+                            <span class="eye-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div class="validation-message"></div>
+                </div>
+
+                <div class="step-actions">
+                    <button type="button" class="btn btn-primary btn-next" data-next="2">
+                        Next: Bank Details →
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: BANK VERIFICATION DETAILS -->
+            <div class="form-step" data-step="2">
+                <div class="step-header">
+                    <h2>Bank Details</h2>
+                    <p>Provide your bank account information for verification</p>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bankName">
+                            Bank Name
+                            <span class="required">*</span>
+                            <span class="tooltip-icon" title="Select your bank from the list or search">?</span>
+                        </label>
+                        <div class="autocomplete-container">
+                            <input 
+                                type="text" 
+                                id="bankName" 
+                                name="bank_name" 
+                                placeholder="Search or select bank..."
+                                class="form-control autocomplete-input"
+                                required
+                                data-validation="bankName"
+                                autocomplete="off"
+                            >
+                            <ul class="autocomplete-list" id="bankList"></ul>
+                        </div>
+                        <div class="validation-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="accountType">
+                            Account Type
+                            <span class="required">*</span>
+                            <span class="tooltip-icon" title="Type of bank account you hold">?</span>
+                        </label>
+                        <select id="accountType" name="account_type" class="form-control" required data-validation="accountType">
+                            <option value="">-- Select Account Type --</option>
+                            <option value="savings">Savings Account</option>
+                            <option value="current">Current Account</option>
+                            <option value="salary">Salary Account</option>
+                        </select>
+                        <div class="validation-message"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="branchCode">
+                            Branch Code / IFSC
+                            <span class="required">*</span>
+                            <span class="tooltip-icon" title="6-digit IFSC code (e.g., SBIN0000123)">?</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="branchCode" 
+                            name="branch_code" 
+                            placeholder="SBIN0000123"
+                            class="form-control"
+                            required
+                            data-validation="ifsc"
+                            maxlength="11"
+                        >
+                        <div class="validation-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="branchName">
+                            Branch Name
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="branchName" 
+                            name="branch_name" 
+                            placeholder="e.g., Downtown Branch"
+                            class="form-control"
+                            required
+                            data-validation="text"
+                        >
+                        <div class="validation-message"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="accountNumber">
+                        Bank Account Number
+                        <span class="required">*</span>
+                        <span class="tooltip-icon" title="Your 11-18 digit account number (will be encrypted)">?</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="accountNumber" 
+                        name="account_number" 
+                        placeholder="1234567890123"
+                        class="form-control sensitive-field"
+                        required
+                        data-validation="accountNumber"
+                        maxlength="18"
+                    >
+                    <div class="security-note">
+                        <span class="lock-icon">🔒</span> This field is encrypted and secure
+                    </div>
+                    <div class="validation-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="accountHolderName">
+                        Account Holder Name
+                        <span class="required">*</span>
+                        <span class="tooltip-icon" title="Must match your bank account holder name">?</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="accountHolderName" 
+                        name="account_holder_name" 
+                        placeholder="As per bank records"
+                        class="form-control"
+                        required
+                        data-validation="name"
+                    >
+                    <div class="validation-message"></div>
+                    <div id="nameMatchStatus" class="name-match-status"></div>
+                </div>
+
+                <div class="step-actions">
+                    <button type="button" class="btn btn-secondary btn-prev" data-prev="1">
+                        ← Back
+                    </button>
+                    <button type="button" class="btn btn-primary btn-next" data-next="3">
+                        Next: Identity & Security →
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: IDENTITY & SECURITY DETAILS -->
+            <div class="form-step" data-step="3">
+                <div class="step-header">
+                    <h2>Identity & Security</h2>
+                    <p>Verify your identity for account security</p>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="idType">
+                            Government ID Type
+                            <span class="required">*</span>
+                            <span class="tooltip-icon" title="Select the ID type you'll provide">?</span>
+                        </label>
+                        <select id="idType" name="id_type" class="form-control" required data-validation="idType">
+                            <option value="">-- Select ID Type --</option>
+                            <option value="aadhaar">Aadhaar Card (12-digit)</option>
+                            <option value="pan">PAN (10-digit)</option>
+                            <option value="passport">Passport</option>
+                            <option value="driving_license">Driving License</option>
+                        </select>
+                        <div class="validation-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="idNumber">
+                            Government ID Number
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="idNumber" 
+                            name="id_number" 
+                            placeholder="123456789012"
+                            class="form-control sensitive-field"
+                            required
+                            data-validation="idNumber"
+                        >
+                        <div class="security-note">
+                            <span class="lock-icon">🔒</span> Encrypted and stored securely
+                        </div>
+                        <div class="validation-message"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dob">
+                            Date of Birth
+                            <span class="required">*</span>
+                            <span class="tooltip-icon" title="Must be 18+ years old">?</span>
+                        </label>
+                        <input 
+                            type="date" 
+                            id="dob" 
+                            name="date_of_birth" 
+                            class="form-control"
+                            required
+                            data-validation="dob"
+                        >
+                        <div class="validation-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="age">
+                            Age
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="age" 
+                            name="age" 
+                            placeholder="Auto-calculated"
+                            class="form-control"
+                            readonly
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">
+                        Residential Address
+                        <span class="required">*</span>
+                        <span class="tooltip-icon" title="Your current address as per records">?</span>
+                    </label>
+                    <textarea 
+                        id="address" 
+                        name="address" 
+                        placeholder="Enter your complete residential address"
+                        class="form-control textarea"
+                        rows="3"
+                        required
+                        data-validation="address"
+                    ></textarea>
+                    <div class="validation-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="city">
+                        City
+                        <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="city" 
+                        name="city" 
+                        placeholder="e.g., Bangalore"
+                        class="form-control"
+                        required
+                        data-validation="text"
+                    >
+                    <div class="validation-message"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="state">
+                            State/Province
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="state" 
+                            name="state" 
+                            placeholder="e.g., Karnataka"
+                            class="form-control"
+                            required
+                            data-validation="text"
+                        >
+                        <div class="validation-message"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postalCode">
+                            Postal Code
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="postalCode" 
+                            name="postal_code" 
+                            placeholder="560001"
+                            class="form-control"
+                            required
+                            data-validation="postalCode"
+                            maxlength="10"
+                        >
+                        <div class="validation-message"></div>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button type="button" class="btn btn-secondary btn-prev" data-prev="2">
+                        ← Back
+                    </button>
+                    <button type="button" class="btn btn-primary btn-next" data-next="4">
+                        Next: Review & Confirm →
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 4: ROLE SELECTION & FINAL CONFIRMATION -->
+            <div class="form-step" data-step="4">
+                <div class="step-header">
+                    <h2>Role & Confirmation</h2>
+                    <p>Select your role and confirm your registration</p>
+                </div>
+
+                <!-- Role Selection -->
+                <div class="role-selection-section">
+                    <label class="role-label">
+                        Select Your Role
+                        <span class="required">*</span>
+                    </label>
+                    <div class="roles-grid">
+                        <label class="role-card selected" data-role="customer">
+                            <input type="radio" name="role" value="customer" checked hidden>
+                            <div class="role-icon">👤</div>
+                            <div class="role-name">Customer</div>
+                            <div class="role-description">Access queue and request services</div>
+                        </label>
+
+                        <label class="role-card" data-role="staff">
+                            <input type="radio" name="role" value="staff" hidden disabled>
+                            <div class="role-lock">🔒</div>
+                            <div class="role-icon">👨‍💼</div>
+                            <div class="role-name">Staff/Admin</div>
+                            <div class="role-description">Manage queues and services</div>
+                            <div class="role-note">Requires admin approval</div>
+                        </label>
+                    </div>
+                    <div class="validation-message"></div>
+                </div>
+
+                <!-- Security & Privacy Section -->
+                <div class="security-section">
+                    <h3>Security & Privacy</h3>
+                    
+                    <div class="info-box info-security">
+                        <span class="info-icon">🔐</span>
+                        <div>
+                            <strong>Your data is secure</strong>
+                            <p>We use bank-grade encryption for all sensitive information including account numbers and government IDs.</p>
+                        </div>
+                    </div>
+
+                    <div class="info-box info-privacy">
+                        <span class="info-icon">📋</span>
+                        <div>
+                            <strong>Privacy Policy</strong>
+                            <p>Your personal and financial information is protected and will never be shared with third parties without your consent.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input 
+                            type="checkbox" 
+                            id="termsCheck" 
+                            name="terms_agreed" 
+                            required
+                        >
+                        <label for="termsCheck" class="checkbox-label">
+                            I agree to the <a href="#" target="_blank" class="link">Terms & Conditions</a> and 
+                            <a href="#" target="_blank" class="link">Privacy Policy</a>
+                            <span class="required">*</span>
+                        </label>
+                        <div class="validation-message"></div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input 
+                            type="checkbox" 
+                            id="dataProcessing" 
+                            name="data_processing_agreed" 
+                            required
+                        >
+                        <label for="dataProcessing" class="checkbox-label">
+                            I consent to the processing of my personal data for account verification and banking services
+                            <span class="required">*</span>
+                        </label>
+                        <div class="validation-message"></div>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <input 
+                            type="checkbox" 
+                            id="captchaCheck" 
+                            name="human_verification" 
+                            required
+                        >
+                        <label for="captchaCheck" class="checkbox-label">
+                            I confirm I am human (verification checkbox)
+                            <span class="required">*</span>
+                        </label>
+                        <div class="validation-message"></div>
+                    </div>
+                </div>
+
+                <!-- Summary Card -->
+                <div class="summary-card">
+                    <h3>Registration Summary</h3>
+                    <div class="summary-content" id="summaryContent">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    <p class="summary-note">Please review the information above before confirming your registration.</p>
+                </div>
+
+                <!-- Final Actions -->
+                <div class="step-actions final-actions">
+                    <button type="button" class="btn btn-secondary btn-prev" data-prev="3">
+                        ← Back
+                    </button>
+                    <button type="submit" class="btn btn-success btn-register" id="submitBtn">
+                        <span class="btn-icon">✓</span> Complete Registration
+                    </button>
+                </div>
+
+                <p class="already-registered">
+                    Already have an account? <a href="{% url 'login' %}" class="link">Login here</a>
+                </p>
+            </div>
+
+            <!-- Error Display Section -->
+            <div id="formErrors" class="form-errors"></div>
+        </form>
+    </div>
+
+    <!-- Trust Badges Section -->
+    <div class="trust-section">
+        <div class="trust-badge">
+            <span class="badge-icon">🔒</span>
+            <span class="badge-text">Bank-Grade Security</span>
+        </div>
+        <div class="trust-badge">
+            <span class="badge-icon">✓</span>
+            <span class="badge-text">Verified</span>
+        </div>
+        <div class="trust-badge">
+            <span class="badge-icon">⚖️</span>
+            <span class="badge-text">Compliance</span>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="{% static 'js/registration-form.js' %}"></script>
+
+{% endblock %}

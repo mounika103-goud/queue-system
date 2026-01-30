@@ -1,0 +1,115 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Manage Queues{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h2">
+            <i class="fas fa-list"></i> Manage Queues
+        </h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addQueueModal">
+            <i class="fas fa-plus"></i> Add Queue
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">All Queues</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Queue ID</th>
+                                <th>Service Type</th>
+                                <th>Counter</th>
+                                <th>Status</th>
+                                <th>Avg Service Time</th>
+                                <th>Current Wait Time</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for queue in queues %}
+                            <tr>
+                                <td><strong>{{ queue.queue_id }}</strong></td>
+                                <td>{{ queue.get_service_type_display }}</td>
+                                <td>{{ queue.counter.counter_name }}</td>
+                                <td>
+                                    <span class="badge {% if queue.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if queue.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ queue.average_service_time }} min</td>
+                                <td>{{ queue.current_wait_time }} min</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editQueueModal">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Queue Modal -->
+<div class="modal fade" id="addQueueModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Queue</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="queueId" class="form-label">Queue ID *</label>
+                        <input type="text" class="form-control" id="queueId" placeholder="e.g., Q001" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="serviceType" class="form-label">Service Type *</label>
+                        <select class="form-select" id="serviceType" required>
+                            <option value="">Select service...</option>
+                            <option value="deposits">Deposits</option>
+                            <option value="withdrawals">Withdrawals</option>
+                            <option value="loans">Loan Services</option>
+                            <option value="account_opening">Account Opening</option>
+                            <option value="general">General Inquiry</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="counter" class="form-label">Counter *</label>
+                        <select class="form-select" id="counter" required>
+                            <option value="">Select counter...</option>
+                            <!-- Dynamic options -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="avgServiceTime" class="form-label">Avg Service Time (minutes)</label>
+                        <input type="number" class="form-control" id="avgServiceTime" value="5" min="1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Queue</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

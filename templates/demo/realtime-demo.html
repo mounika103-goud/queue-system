@@ -1,0 +1,348 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Real-Time Features Demo - Queue Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Demo Header -->
+    <div class="page-header mb-5">
+        <h1><i class="fas fa-zap me-2"></i>Real-Time Features Demo</h1>
+        <p class="text-muted">Live updates, animations, and skeleton loaders</p>
+    </div>
+
+    <!-- Skeleton Loaders Demo -->
+    <div class="row mb-5">
+        <div class="col-lg-12 mb-4">
+            <h2 class="mb-3"><i class="fas fa-spinner me-2"></i>Skeleton Loaders</h2>
+        </div>
+
+        <!-- Text Skeleton -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Text Skeleton</h5>
+                    <div id="skeleton-text-demo"></div>
+                    <button class="btn btn-sm btn-primary mt-3" onclick="showTextSkeleton()">
+                        Show Skeleton
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Skeleton -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Card Skeleton</h5>
+                    <div id="skeleton-card-demo"></div>
+                    <button class="btn btn-sm btn-primary mt-3" onclick="showCardSkeleton()">
+                        Show Skeleton
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Skeleton -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Grid Skeleton</h5>
+                    <div id="skeleton-grid-demo"></div>
+                    <button class="btn btn-sm btn-primary mt-3" onclick="showGridSkeleton()">
+                        Show Skeleton
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Skeleton -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Table Skeleton</h5>
+                    <div id="skeleton-table-demo"></div>
+                    <button class="btn btn-sm btn-primary mt-3" onclick="showTableSkeleton()">
+                        Show Skeleton
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- Animations Demo -->
+    <div class="row mb-5">
+        <div class="col-lg-12 mb-4">
+            <h2 class="mb-3"><i class="fas fa-film me-2"></i>Animations & Effects</h2>
+        </div>
+
+        <!-- Pulse Animation -->
+        <div class="col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="kpi-card gradient-blue pulse-animation" style="margin: -1.5rem -1.5rem 1rem -1.5rem; height: 150px; display: flex; align-items: center; justify-content: center;">
+                        <div class="text-white">
+                            <h4>Pulse Animation</h4>
+                            <p>Token Status Change</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="triggerPulse()">
+                        Trigger Pulse
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Token Calling Animation -->
+        <div class="col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="badge bg-warning p-3 mb-3" style="font-size: 1.2rem;">
+                        Token #1001
+                    </div>
+                    <div id="token-calling-demo"></div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="triggerTokenCalling()">
+                        Call Token
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Countdown Timer -->
+        <div class="col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="mb-3">Countdown Timer</h5>
+                    <div class="countdown-timer" id="countdown-timer" style="font-size: 2rem;">05:00</div>
+                    <button class="btn btn-sm btn-outline-primary mt-3" onclick="startCountdown()">
+                        Start Timer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="col-lg-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3">Toast Notifications</h5>
+                    <div class="btn-group-vertical w-100" role="group">
+                        <button class="btn btn-sm btn-outline-success mb-2" onclick="showSuccessToast()">
+                            Success Toast
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger mb-2" onclick="showErrorToast()">
+                            Error Toast
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning mb-2" onclick="showWarningToast()">
+                            Warning Toast
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="showInfoToast()">
+                            Info Toast
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- Live Queue Status Demo -->
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <h2 class="mb-3"><i class="fas fa-sync-alt me-2"></i>Live Queue Status</h2>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Auto-refresh enabled:</strong> Queue status updates every 5 seconds with smooth animations
+            </div>
+        </div>
+
+        <!-- Queue Card with Live Updates -->
+        <div class="col-lg-4 mb-4" data-queue-id="Q1">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">Deposits Queue</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Customers Waiting</small>
+                        <h3 class="mb-0" data-waiting-count>12</h3>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Average Wait Time</small>
+                        <h4 class="mb-0" data-avg-wait>8 min</h4>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: 65%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Queue Status: <span class="badge bg-success">Normal</span></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4" data-queue-id="Q2">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">Withdrawals Queue</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Customers Waiting</small>
+                        <h3 class="mb-0" data-waiting-count>28</h3>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Average Wait Time</small>
+                        <h4 class="mb-0" data-avg-wait>15 min</h4>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: 85%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Queue Status: <span class="badge bg-warning">Busy</span></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4" data-queue-id="Q3">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">Loans Queue</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Customers Waiting</small>
+                        <h3 class="mb-0" data-waiting-count>45</h3>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Average Wait Time</small>
+                        <h4 class="mb-0" data-avg-wait>22 min</h4>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-danger" style="width: 100%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">Queue Status: <span class="badge bg-danger">Critical</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+
+    #token-calling-demo {
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f3f7;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<script>
+    // Demo Functions
+
+    function showTextSkeleton() {
+        const container = document.getElementById('skeleton-text-demo');
+        SkeletonLoader.showSkeleton(container, 'text', { lines: 3, width: '100%' });
+        setTimeout(() => {
+            SkeletonLoader.replaceSkeleton(container, `
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <p>Ut enim ad minim veniam, quis nostrud exercitation.</p>
+            `);
+        }, 2500);
+    }
+
+    function showCardSkeleton() {
+        const container = document.getElementById('skeleton-card-demo');
+        SkeletonLoader.showSkeleton(container, 'card');
+        setTimeout(() => {
+            SkeletonLoader.replaceSkeleton(container, `
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Card Title</h5>
+                        <p class="card-text">Some quick example text.</p>
+                    </div>
+                </div>
+            `);
+        }, 2500);
+    }
+
+    function showGridSkeleton() {
+        const container = document.getElementById('skeleton-grid-demo');
+        SkeletonLoader.showSkeleton(container, 'grid', { items: 3 });
+        setTimeout(() => {
+            SkeletonLoader.replaceSkeleton(container, `
+                <div class="row">
+                    <div class="col-6 mb-2"><div class="badge bg-primary p-2 w-100">Item 1</div></div>
+                    <div class="col-6 mb-2"><div class="badge bg-success p-2 w-100">Item 2</div></div>
+                    <div class="col-6"><div class="badge bg-warning p-2 w-100">Item 3</div></div>
+                </div>
+            `);
+        }, 2500);
+    }
+
+    function showTableSkeleton() {
+        const container = document.getElementById('skeleton-table-demo');
+        SkeletonLoader.showSkeleton(container, 'table', { rows: 2, cols: 2 });
+        setTimeout(() => {
+            SkeletonLoader.replaceSkeleton(container, `
+                <table class="table table-sm">
+                    <tr><td>Row 1</td><td>Data</td></tr>
+                    <tr><td>Row 2</td><td>Data</td></tr>
+                </table>
+            `);
+        }, 2500);
+    }
+
+    function triggerPulse() {
+        const demo = document.querySelector('.pulse-animation');
+        demo.classList.remove('pulse-animation');
+        setTimeout(() => demo.classList.add('pulse-animation'), 10);
+    }
+
+    function triggerTokenCalling() {
+        const demo = document.getElementById('token-calling-demo');
+        const token = document.createElement('div');
+        token.className = 'badge bg-primary p-3 token-calling';
+        token.style.fontSize = '1.2rem';
+        token.innerHTML = 'Calling...';
+        demo.innerHTML = '';
+        demo.appendChild(token);
+        
+        setTimeout(() => {
+            token.innerHTML = '✓ Called!';
+            token.className = 'badge bg-success p-3';
+        }, 800);
+    }
+
+    function startCountdown() {
+        const element = document.getElementById('countdown-timer');
+        realtimeManager.startCountdown(element, 300, () => {
+            realtimeManager.showNotification('Time is up! 🔔', 'info');
+        });
+    }
+
+    function showSuccessToast() {
+        realtimeManager.showNotification('✓ Token successfully called to Counter 1!', 'success');
+    }
+
+    function showErrorToast() {
+        realtimeManager.showNotification('✕ Failed to process request. Please try again.', 'error');
+    }
+
+    function showWarningToast() {
+        realtimeManager.showNotification('⚠ Queue is getting busy. Average wait time increased.', 'warning');
+    }
+
+    function showInfoToast() {
+        realtimeManager.showNotification('ⓘ New customer joined the queue.', 'info');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Manage Counters{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="h2">
+            <i class="fas fa-store"></i> Manage Counters
+        </h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCounterModal">
+            <i class="fas fa-plus"></i> Add Counter
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">All Counters</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Counter ID</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Manager</th>
+                                <th>Current Staff</th>
+                                <th>Service Types</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for counter in counters %}
+                            <tr>
+                                <td><strong>{{ counter.counter_id }}</strong></td>
+                                <td>{{ counter.counter_name }}</td>
+                                <td>
+                                    <span class="badge bg-{% if counter.status == 'active' %}success{% elif counter.status == 'maintenance' %}warning{% else %}danger{% endif %}">
+                                        {{ counter.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ counter.manager.first_name|default:"Unassigned" }}</td>
+                                <td>{{ counter.current_staff.first_name|default:"Unassigned" }}</td>
+                                <td><small>{{ counter.service_types }}</small></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editCounterModal">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Counter Modal -->
+<div class="modal fade" id="addCounterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Counter</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="counterId" class="form-label">Counter ID *</label>
+                        <input type="text" class="form-control" id="counterId" placeholder="e.g., C001" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="counterName" class="form-label">Counter Name *</label>
+                        <input type="text" class="form-control" id="counterName" placeholder="e.g., Counter 1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="serviceTypes" class="form-label">Service Types (comma-separated)</label>
+                        <input type="text" class="form-control" id="serviceTypes" placeholder="deposits, withdrawals, loans">
+                    </div>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save Counter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

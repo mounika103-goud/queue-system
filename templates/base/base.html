@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Queue Management - Smart Banking{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/notifications.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
+    <link rel="stylesheet" href="{% static 'css/realtime-animations.css' %}">>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- ============================================
+         GLOBAL NAVBAR
+         ============================================ -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm" id="globalNavbar">
+        <div class="container-fluid">
+            <!-- Logo/Brand -->
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="fas fa-bank me-2"></i>Queue Manager
+            </a>
+
+            <!-- Mobile Toggle Button -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Content -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto align-items-center gap-2">
+                    
+                    <!-- Notifications Dropdown -->
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge bg-danger position-absolute top-0 start-100 translate-middle" 
+                                  id="notificationBadge" style="display: none;">0</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end notification-dropdown" 
+                            aria-labelledby="notificationDropdown" id="notificationList">
+                            <li class="text-center p-3 text-muted">
+                                <small>No notifications</small>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Dark/Light Mode Toggle -->
+                    <li class="nav-item">
+                        <button class="btn btn-link nav-link" id="themeToggle" title="Toggle dark mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
+
+                    <!-- User Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i>{{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/profile/">
+                                    <i class="fas fa-user me-2"></i>Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/settings/">
+                                    <i class="fas fa-cog me-2"></i>Settings
+                                </a>
+                            </li>
+                            {% if user.userrole.role == 'admin' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/admin/">
+                                    <i class="fas fa-shield me-2"></i>Admin Panel
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/logout/">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <!-- Login/Register for Anonymous Users -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login/">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================
+         MAIN CONTAINER WITH SIDEBAR
+         ============================================ -->
+    <div class="d-flex" style="min-height: calc(100vh - 56px);">
+        
+        <!-- Role-Based Sidebar -->
+        {% if user.is_authenticated %}
+        <nav class="sidebar bg-light border-end" id="sidebar">
+            <div class="sidebar-header p-3 border-bottom">
+                <h5 class="mb-0">
+                    {% if user.userrole.role == 'customer' %}
+                        <i class="fas fa-user me-2 text-primary"></i>Customer
+                    {% elif user.userrole.role == 'staff' %}
+                        <i class="fas fa-headset me-2 text-success"></i>Staff
+                    {% elif user.userrole.role == 'counter_manager' %}
+                        <i class="fas fa-chart-line me-2 text-info"></i>Manager
+                    {% elif user.userrole.role == 'admin' %}
+                        <i class="fas fa-shield-alt me-2 text-danger"></i>Admin
+                    {% else %}
+                        <i class="fas fa-user me-2"></i>User
+                    {% endif %}
+                </h5>
+            </div>
+
+            <ul class="nav nav-pills flex-column p-3 gap-2" id="sidebarNav">
+                <!-- Common Links -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/" data-page="home">
+                        <i class="fas fa-home me-2"></i>Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard/" data-page="dashboard">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+
+                {% if user.userrole.role == 'customer' %}
+                <!-- Customer Menu -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/customer/get-token/" data-page="token">
+                        <i class="fas fa-ticket-alt me-2"></i>Get Token
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/customer/token-status/" data-page="status">
+                        <i class="fas fa-search me-2"></i>Token Status
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/customer/history/" data-page="history">
+                        <i class="fas fa-history me-2"></i>History
+                    </a>
+                </li>
+
+                {% elif user.userrole.role == 'staff' %}
+                <!-- Staff Menu -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/staff/dashboard/" data-page="queue">
+                        <i class="fas fa-list me-2"></i>My Queue
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/staff/serve/" data-page="serve">
+                        <i class="fas fa-phone me-2"></i>Serve Customer
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/staff/statistics/" data-page="stats">
+                        <i class="fas fa-chart-bar me-2"></i>Statistics
+                    </a>
+                </li>
+
+                {% elif user.userrole.role == 'counter_manager' %}
+                <!-- Counter Manager Menu -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/manager/counters/" data-page="counters">
+                        <i class="fas fa-door-open me-2"></i>Counters
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/manager/staff/" data-page="staff">
+                        <i class="fas fa-users me-2"></i>Staff
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/manager/performance/" data-page="performance">
+                        <i class="fas fa-chart-line me-2"></i>Performance
+                    </a>
+                </li>
+
+                {% elif user.userrole.role == 'admin' %}
+                <!-- Admin Menu -->
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/dashboard/" data-page="admin-dash">
+                        <i class="fas fa-chart-pie me-2"></i>System Overview
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/users/" data-page="users">
+                        <i class="fas fa-users-cog me-2"></i>User Management
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/analytics/" data-page="analytics">
+                        <i class="fas fa-analytics me-2"></i>Analytics
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/reports/" data-page="reports">
+                        <i class="fas fa-file-pdf me-2"></i>Reports
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/settings/" data-page="settings">
+                        <i class="fas fa-cog me-2"></i>Settings
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- Divider -->
+                <li class="nav-item mt-3">
+                    <hr class="my-2">
+                </li>
+
+                <!-- Help & Support -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="fas fa-question-circle me-2"></i>Help
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <main class="main-content flex-grow-1">
+            <!-- Django Messages -->
+            {% if messages %}
+            <div class="container-fluid pt-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show animate-slideInDown" 
+                     role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Page Content -->
+            <div class="page-wrapper">
+                {% block content %}
+                <!-- Content goes here -->
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- ============================================
+         HELP/SUPPORT MODAL
+         ============================================ -->
+    <div class="modal fade" id="helpModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-life-ring me-2"></i>Help & Support
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>Frequently Asked Questions</h6>
+                    <p class="mb-3">
+                        <strong>How do I generate a token?</strong><br>
+                        Navigate to "Get Token" and select your service type.
+                    </p>
+                    <p class="mb-3">
+                        <strong>How long is the average wait?</strong><br>
+                        Check your token status for real-time wait estimates.
+                    </p>
+                    <p>
+                        <strong>Need more help?</strong><br>
+                        Contact support at <strong>support@bank.com</strong> or call <strong>1800-BANK-HELP</strong>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}"></script>
+    <script src="{% static 'js/ui.js' %}"></script>
+    <script src="{% static 'js/skeleton-loader.js' %}"></script>
+    <script src="{% static 'js/realtime-manager.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        // Highlight current page in sidebar
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('#sidebarNav .nav-link');
+            
+            navLinks.forEach(link => {
+                if (link.href.includes(currentPath)) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

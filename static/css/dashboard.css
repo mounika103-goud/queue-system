@@ -1,0 +1,268 @@
+/* Dashboard Specific Styles */
+
+.dashboard-card {
+    border-left: 4px solid var(--primary-color);
+}
+
+.dashboard-card .card-title {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dashboard-card h2 {
+    font-weight: 700;
+    margin: 0.5rem 0 0;
+}
+
+/* Token Display */
+.token-display {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.token-display .token-number {
+    font-size: 3rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 1rem;
+}
+
+.token-display .token-status {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* Status Badge */
+.badge-status {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Queue List */
+.queue-item {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s ease;
+}
+
+.queue-item:last-child {
+    border-bottom: none;
+}
+
+.queue-item:hover {
+    background-color: #f8f9fa;
+}
+
+.queue-item-title {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.queue-item-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Service Timeline */
+.service-timeline {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.service-step {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.service-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 50px;
+    width: 2px;
+    height: 60px;
+    background-color: #dee2e6;
+}
+
+.service-step.completed::after {
+    background-color: var(--success-color);
+}
+
+.service-step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    margin-right: 1.5rem;
+    flex-shrink: 0;
+    background-color: #dee2e6;
+}
+
+.service-step.completed .service-step-icon {
+    background-color: var(--success-color);
+}
+
+.service-step.current .service-step-icon {
+    background-color: var(--info-color);
+    animation: pulse 2s infinite;
+}
+
+.service-step-content h5 {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.service-step-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Priority Indicators */
+.priority-normal {
+    color: #6c757d;
+}
+
+.priority-senior {
+    color: var(--warning-color);
+}
+
+.priority-vip {
+    color: var(--info-color);
+}
+
+.priority-emergency {
+    color: var(--danger-color);
+}
+
+/* Counter Status */
+.counter-active {
+    border-left: 4px solid var(--success-color);
+}
+
+.counter-maintenance {
+    border-left: 4px solid var(--warning-color);
+}
+
+.counter-inactive {
+    border-left: 4px solid var(--danger-color);
+}
+
+/* Charts Container */
+.chart-container {
+    position: relative;
+    height: 400px;
+    margin: 1rem 0;
+}
+
+/* Progress Indicators */
+.progress {
+    border-radius: 10px;
+    background-color: #e9ecef;
+    height: 25px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    font-weight: 600;
+    line-height: 25px;
+    color: white;
+}
+
+/* Notification */
+.notification-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: var(--danger-color);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.75rem;
+}
+
+/* Loading Animation */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Modal Styling */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 2px solid #f0f0f0;
+    background-color: #f8f9fa;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-title {
+    font-weight: 700;
+    color: #212529;
+}
+
+/* Utility Classes */
+.border-left-4 {
+    border-left: 4px solid var(--primary-color);
+}
+
+.rounded-lg {
+    border-radius: 12px;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .token-display .token-number {
+        font-size: 2rem;
+    }
+    
+    .service-step {
+        margin-bottom: 1.5rem;
+    }
+    
+    .service-step:not(:last-child)::after {
+        height: 50px;
+        top: 45px;
+    }
+}

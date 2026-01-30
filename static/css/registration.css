@@ -1,0 +1,1120 @@
+/* ============================================================================
+   REGISTRATION PAGE - PROFESSIONAL BANKING PLATFORM STYLING
+   Bank-grade design with enterprise trust elements
+   ============================================================================ */
+
+:root {
+    /* Primary Colors - Trust & Security Focused */
+    --primary-blue: #0052CC;
+    --primary-dark: #00338D;
+    --success-green: #00A86B;
+    --warning-orange: #FF9800;
+    --danger-red: #E74C3C;
+    
+    /* Neutral Colors */
+    --light-gray: #F5F7FA;
+    --medium-gray: #E8ECEF;
+    --dark-gray: #4A5568;
+    --text-dark: #1A202C;
+    --text-light: #718096;
+    
+    /* Accent Colors */
+    --accent-blue: #E8F0FF;
+    --accent-green: #E8F5E9;
+    --accent-orange: #FFF3E0;
+    
+    /* Shadows & Depths */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+    
+    /* Transitions */
+    --transition-fast: 0.2s ease-in-out;
+    --transition-normal: 0.3s ease-in-out;
+    --transition-slow: 0.5s ease-in-out;
+}
+
+/* ============================================================================
+   BASE & LAYOUT
+   ============================================================================ */
+
+.registration-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #F5F7FA 0%, #EEF2F5 100%);
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.registration-header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: slideDown 0.6s ease-out;
+}
+
+.header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-decoration: none;
+    color: var(--text-dark);
+}
+
+.logo-icon {
+    font-size: 3.5rem;
+    animation: bounce 2s infinite;
+}
+
+.registration-header h1 {
+    font-size: 2.2rem;
+    color: var(--primary-dark);
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.header-subtitle {
+    font-size: 1rem;
+    color: var(--text-light);
+    margin: 0;
+}
+
+/* ============================================================================
+   REGISTRATION CARD
+   ============================================================================ */
+
+.registration-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 700px;
+    padding: 50px;
+    animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+/* ============================================================================
+   PROGRESS INDICATOR
+   ============================================================================ */
+
+.progress-section {
+    margin-bottom: 50px;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 4px;
+    background: var(--medium-gray);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-blue) 0%, var(--success-green) 100%);
+    width: 25%;
+    border-radius: 4px;
+    transition: width var(--transition-slow);
+    box-shadow: 0 0 10px rgba(0, 82, 204, 0.4);
+}
+
+.steps-indicator {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    opacity: 0.5;
+}
+
+.step.step-active,
+.step.step-completed {
+    opacity: 1;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--light-gray);
+    border: 2px solid var(--medium-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+}
+
+.step.step-active .step-number {
+    background: var(--primary-blue);
+    border-color: var(--primary-blue);
+    color: white;
+    box-shadow: 0 0 15px rgba(0, 82, 204, 0.4);
+}
+
+.step.step-completed .step-number {
+    background: var(--success-green);
+    border-color: var(--success-green);
+    color: white;
+}
+
+.step-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   FORM STEPS
+   ============================================================================ */
+
+.form-step {
+    display: none;
+    animation: fadeIn var(--transition-normal);
+}
+
+.form-step.active {
+    display: block;
+}
+
+.step-header {
+    margin-bottom: 35px;
+}
+
+.step-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-dark);
+    margin: 0 0 8px 0;
+    font-weight: 700;
+}
+
+.step-header p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    margin: 0;
+}
+
+/* ============================================================================
+   FORM GROUPS & INPUTS
+   ============================================================================ */
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.required {
+    color: var(--danger-red);
+    font-weight: 700;
+}
+
+.tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+    color: var(--primary-blue);
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: help;
+    position: relative;
+}
+
+.tooltip-icon:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-dark);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: var(--shadow-md);
+}
+
+/* Input Styles */
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--medium-gray);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+    background: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    background: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+}
+
+.form-control::placeholder {
+    color: var(--text-light);
+}
+
+.form-control:disabled,
+.form-control:readonly {
+    background: var(--light-gray);
+    color: var(--text-light);
+    cursor: not-allowed;
+}
+
+select.form-control {
+    cursor: pointer;
+    padding-right: 40px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234A5568' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Sensitive Fields - Account Numbers */
+.sensitive-field {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+.security-note {
+    font-size: 0.75rem;
+    color: var(--success-green);
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ============================================================================
+   PHONE INPUT WITH COUNTRY CODE
+   ============================================================================ */
+
+.phone-input-group {
+    display: flex;
+    gap: 12px;
+}
+
+.country-select {
+    flex: 0 0 auto;
+    width: 140px;
+}
+
+.phone-input-group .form-control {
+    flex: 1;
+}
+
+/* ============================================================================
+   PASSWORD STRENGTH INDICATOR
+   ============================================================================ */
+
+.password-input-group {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.password-input-group .form-control {
+    flex: 1;
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--text-light);
+    transition: color var(--transition-fast);
+    padding: 8px;
+}
+
+.toggle-password:hover {
+    color: var(--primary-blue);
+}
+
+.password-strength {
+    margin-top: 15px;
+    padding: 15px;
+    background: var(--light-gray);
+    border-radius: 8px;
+}
+
+.strength-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--medium-gray);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.strength-progress {
+    height: 100%;
+    background: var(--danger-red);
+    width: 0%;
+    transition: all var(--transition-fast);
+    border-radius: 4px;
+}
+
+.strength-progress.weak {
+    width: 25%;
+    background: var(--danger-red);
+}
+
+.strength-progress.fair {
+    width: 50%;
+    background: var(--warning-orange);
+}
+
+.strength-progress.good {
+    width: 75%;
+    background: #FFD700;
+}
+
+.strength-progress.strong {
+    width: 100%;
+    background: var(--success-green);
+}
+
+.strength-label {
+    font-size: 0.85rem;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.strength-requirements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.requirement {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.requirement-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 0.7rem;
+    color: var(--danger-red);
+}
+
+.requirement.met {
+    color: var(--success-green);
+}
+
+.requirement.met .requirement-icon {
+    color: var(--success-green);
+}
+
+/* ============================================================================
+   AUTOCOMPLETE
+   ============================================================================ */
+
+.autocomplete-container {
+    position: relative;
+}
+
+.autocomplete-input {
+    width: 100%;
+}
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid var(--primary-blue);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+    display: none;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+}
+
+.autocomplete-list.active {
+    display: block;
+}
+
+.autocomplete-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    font-size: 0.9rem;
+}
+
+.autocomplete-item:hover {
+    background-color: var(--accent-blue);
+}
+
+/* ============================================================================
+   NAME MATCH STATUS
+   ============================================================================ */
+
+.name-match-status {
+    font-size: 0.85rem;
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: 6px;
+    display: none;
+}
+
+.name-match-status.checking {
+    color: var(--warning-orange);
+    background: var(--accent-orange);
+    display: block;
+}
+
+.name-match-status.match {
+    color: var(--success-green);
+    background: var(--accent-green);
+    display: block;
+}
+
+.name-match-status.mismatch {
+    color: var(--danger-red);
+    background: rgba(231, 76, 60, 0.1);
+    display: block;
+}
+
+/* ============================================================================
+   VALIDATION MESSAGES
+   ============================================================================ */
+
+.validation-message {
+    font-size: 0.8rem;
+    color: var(--danger-red);
+    margin-top: 6px;
+    display: none;
+    animation: slideDown 0.3s ease-out;
+}
+
+.validation-message.show {
+    display: block;
+}
+
+.form-control.error {
+    border-color: var(--danger-red);
+    background: rgba(231, 76, 60, 0.05);
+}
+
+.form-control.success {
+    border-color: var(--success-green);
+    background: var(--accent-green);
+}
+
+/* ============================================================================
+   ROLE SELECTION
+   ============================================================================ */
+
+.role-selection-section {
+    margin-bottom: 40px;
+    padding-bottom: 40px;
+    border-bottom: 2px solid var(--medium-gray);
+}
+
+.role-label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 20px;
+}
+
+.roles-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.role-card {
+    position: relative;
+    padding: 24px;
+    border: 2px solid var(--medium-gray);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-align: center;
+    background: white;
+}
+
+.role-card:hover {
+    border-color: var(--primary-blue);
+    box-shadow: var(--shadow-md);
+}
+
+.role-card.selected {
+    border-color: var(--primary-blue);
+    background: var(--accent-blue);
+    box-shadow: 0 0 15px rgba(0, 82, 204, 0.2);
+}
+
+.role-card[data-role="staff"] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.role-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+}
+
+.role-lock {
+    position: absolute;
+    top: -10px;
+    right: 12px;
+    font-size: 1.5rem;
+}
+
+.role-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+}
+
+.role-description {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.role-note {
+    font-size: 0.75rem;
+    color: var(--warning-orange);
+    font-weight: 600;
+}
+
+/* ============================================================================
+   SECURITY & PRIVACY SECTION
+   ============================================================================ */
+
+.security-section {
+    margin-bottom: 40px;
+}
+
+.security-section h3 {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.info-box {
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    animation: slideDown 0.5s ease-out;
+}
+
+.info-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.info-box strong {
+    display: block;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    margin-bottom: 4px;
+}
+
+.info-box p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin: 0;
+}
+
+.info-security {
+    background: var(--accent-blue);
+    border-left: 4px solid var(--primary-blue);
+}
+
+.info-privacy {
+    background: var(--accent-green);
+    border-left: 4px solid var(--success-green);
+}
+
+/* Checkboxes */
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    cursor: pointer;
+    accent-color: var(--primary-blue);
+    flex-shrink: 0;
+}
+
+.checkbox-label {
+    flex: 1;
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 400;
+    cursor: pointer;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.checkbox-label .required {
+    margin-left: 4px;
+}
+
+.checkbox-label a.link {
+    color: var(--primary-blue);
+    text-decoration: underline;
+    transition: color var(--transition-fast);
+}
+
+.checkbox-label a.link:hover {
+    color: var(--primary-dark);
+}
+
+/* ============================================================================
+   SUMMARY CARD
+   ============================================================================ */
+
+.summary-card {
+    background: var(--light-gray);
+    border-left: 4px solid var(--primary-blue);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.summary-card h3 {
+    font-size: 1rem;
+    color: var(--text-dark);
+    margin: 0 0 15px 0;
+    font-weight: 700;
+}
+
+.summary-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.summary-item {
+    font-size: 0.85rem;
+}
+
+.summary-item-label {
+    color: var(--text-light);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.summary-item-value {
+    color: var(--text-dark);
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.summary-note {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin: 0;
+    font-style: italic;
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    outline: none;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--primary-dark);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: var(--light-gray);
+    color: var(--text-dark);
+    border: 2px solid var(--medium-gray);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--medium-gray);
+    border-color: var(--text-dark);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--success-green) 100%);
+    color: white;
+    box-shadow: var(--shadow-lg);
+    font-size: 1rem;
+}
+
+.btn-success:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 82, 204, 0.3);
+}
+
+.btn-register {
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-next,
+.btn-prev {
+    width: 48%;
+}
+
+.step-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 40px;
+}
+
+.step-actions.final-actions {
+    flex-direction: column-reverse;
+}
+
+/* ============================================================================
+   FORM ERRORS
+   ============================================================================ */
+
+.form-errors {
+    display: none;
+    background: rgba(231, 76, 60, 0.1);
+    border: 2px solid var(--danger-red);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.form-errors.show {
+    display: block;
+}
+
+.form-errors h4 {
+    color: var(--danger-red);
+    margin: 0 0 10px 0;
+    font-size: 0.95rem;
+}
+
+.form-errors ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.form-errors li {
+    color: var(--danger-red);
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+/* ============================================================================
+   TRUST SECTION
+   ============================================================================ */
+
+.trust-section {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 50px;
+    padding: 30px 0;
+    flex-wrap: wrap;
+}
+
+.trust-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.badge-icon {
+    font-size: 2rem;
+}
+
+.badge-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* ============================================================================
+   ALREADY REGISTERED LINK
+   ============================================================================ */
+
+.already-registered {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-top: 20px;
+}
+
+.already-registered .link {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition-fast);
+}
+
+.already-registered .link:hover {
+    text-decoration: underline;
+    color: var(--primary-dark);
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .registration-container {
+        padding: 20px 15px;
+    }
+
+    .registration-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .registration-card {
+        padding: 30px 20px;
+    }
+
+    .steps-indicator {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .step-label {
+        font-size: 0.7rem;
+    }
+
+    .step-number {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .roles-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-content {
+        grid-template-columns: 1fr;
+    }
+
+    .trust-section {
+        gap: 20px;
+    }
+
+    .step-actions {
+        flex-direction: column;
+    }
+
+    .btn-next,
+    .btn-prev {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .registration-card {
+        padding: 20px 15px;
+        border-radius: 12px;
+    }
+
+    .step-header h2 {
+        font-size: 1.4rem;
+    }
+
+    .steps-indicator {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .phone-input-group {
+        flex-direction: column;
+    }
+
+    .country-select {
+        width: 100%;
+    }
+
+    .strength-requirements {
+        grid-template-columns: 1fr;
+    }
+
+    .registration-header {
+        margin-bottom: 25px;
+    }
+}
+
+/* ============================================================================
+   PRINT STYLES
+   ============================================================================ */
+
+@media print {
+    .registration-container {
+        background: white;
+    }
+
+    .registration-card {
+        box-shadow: none;
+    }
+
+    .step-actions {
+        display: none;
+    }
+}

@@ -1,0 +1,181 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h1 class="h2">
+        <i class="fas fa-chart-bar"></i> Analytics & Reports
+    </h1>
+</div>
+
+<!-- Overall Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Total Tokens Today</h6>
+                <h2 class="text-primary">{{ overall.total_tokens }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Tokens Served</h6>
+                <h2 class="text-success">{{ overall.total_served }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>Cancelled</h6>
+                <h2 class="text-danger">{{ overall.cancelled }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6>No-Show</h6>
+                <h2 class="text-warning">{{ overall.no_show }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Queue Metrics -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Queue Performance Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Queue ID</th>
+                                <th>Service Type</th>
+                                <th>Total Served</th>
+                                <th>Avg Wait Time</th>
+                                <th>Avg Service Time</th>
+                                <th>Efficiency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for queue_id, metrics in queue_metrics.items %}
+                            <tr>
+                                <td>{{ queue_id }}</td>
+                                <td>-</td>
+                                <td>{{ metrics.total_served }}</td>
+                                <td>{{ metrics.avg_wait_time }} min</td>
+                                <td>{{ metrics.avg_service_time }} min</td>
+                                <td>
+                                    <div class="progress" style="width: 100px;">
+                                        <div class="progress-bar bg-success" style="width: 75%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts (Placeholder for Chart.js Integration) -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Daily Trends</h5>
+            </div>
+            <div class="card-body">
+                <div id="dailyChart" style="height: 300px;">
+                    <canvas></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Service Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div id="serviceChart" style="height: 300px;">
+                    <canvas></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Report -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Detailed Daily Report</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="mb-3">
+                    <div class="input-group">
+                        <input type="date" name="date" class="form-control" value="{{ date }}">
+                        <button class="btn btn-primary" type="submit">Filter</button>
+                    </div>
+                </form>
+                
+                {% if analytics %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Queue</th>
+                                    <th>Total Tokens</th>
+                                    <th>Served</th>
+                                    <th>Cancelled</th>
+                                    <th>No Show</th>
+                                    <th>Avg Wait</th>
+                                    <th>Avg Service</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in analytics %}
+                                <tr>
+                                    <td>{{ record.date }}</td>
+                                    <td>{{ record.queue.service_type }}</td>
+                                    <td>{{ record.total_tokens }}</td>
+                                    <td>{{ record.served_tokens }}</td>
+                                    <td>{{ record.cancelled_tokens }}</td>
+                                    <td>{{ record.no_show_tokens }}</td>
+                                    <td>{{ record.avg_wait_time }} min</td>
+                                    <td>{{ record.avg_service_time }} min</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No data available for selected date</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+{% load static %}
+<script src="{% static 'js/charts.js' %}"></script>
+{% endblock %}

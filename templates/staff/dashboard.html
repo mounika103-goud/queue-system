@@ -1,0 +1,668 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Staff Dashboard - Queue Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid page-wrapper">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1><i class="fas fa-headset me-2"></i>Staff Dashboard</h1>
+                <p class="text-muted">Counter {{ counter_id }} - {{ counter_name }}</p>
+            </div>
+            <div class="col-auto">
+                <span class="badge bg-success p-2">
+                    <i class="fas fa-circle animate-pulse me-1"></i>Online
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Counter Status Row -->
+    <div class="row mb-4">
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card card-left-border info shadow-sm hover-lift">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Tokens Served Today</p>
+                    <h4 class="mb-0">{{ tokens_served_today }}</h4>
+                    <small class="text-muted">+{{ tokens_served_increase }}% from yesterday</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card card-left-border success shadow-sm hover-lift">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Avg Service Time</p>
+                    <h4 class="mb-0">{{ avg_service_time|default:"--" }} min</h4>
+                    <small class="text-muted">Excellent performance</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card card-left-border warning shadow-sm hover-lift">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">Waiting Customers</p>
+                    <h4 class="mb-0">{{ waiting_count }}</h4>
+                    <small class="text-muted" id="counterLoad">{{ counter_load_status }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Current Serving & Next Queue (Left) -->
+        <div class="col-lg-7 mb-4">
+            <!-- Currently Serving -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-check me-2"></i>Currently Serving</h5>
+                </div>
+                <div class="card-body">
+                    {% if serving_token %}
+                    <div class="serving-token-display">
+                        <div class="token-circle animate-bounce">
+                            {{ serving_token.token_number }}
+                        </div>
+                        
+                        <div class="serving-info mt-4">
+                            <div class="info-row">
+                                <span class="info-label">Service Type:</span>
+                                <span class="info-value">{{ serving_token.queue.service_type }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Priority:</span>
+                                <span class="info-value">
+                                    <span class="badge badge-{{ serving_token.priority_class }}">
+                                        {{ serving_token.get_priority_display }}
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Called At:</span>
+                                <span class="info-value time-display" data-time="{{ serving_token.called_at|date:'c' }}">
+                                    {{ serving_token.called_at|timesince }} ago
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Elapsed Time:</span>
+                                <span class="info-value" id="serviceTimer">0s</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button class="btn btn-success btn-lg" id="completeServiceBtn">
+                                <i class="fas fa-check me-2"></i>Service Completed
+                            </button>
+                            <button class="btn btn-warning" id="skipTokenBtn">
+                                <i class="fas fa-forward me-2"></i>Skip
+                            </button>
+                            <button class="btn btn-info" id="transferTokenBtn">
+                                <i class="fas fa-exchange-alt me-2"></i>Transfer
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted opacity-50 mb-3"></i>
+                        <h5>No Customer Being Served</h5>
+                        <p class="text-muted mb-3">Call the next customer to begin service</p>
+                        <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#callNextModal">
+                            <i class="fas fa-arrow-down me-2"></i>Call Next Customer
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Next Token Preview -->
+            {% if next_token %}
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Next in Queue</h5>
+                </div>
+                <div class="card-body">
+                    <div class="next-token-preview">
+                        <div class="next-token-number">
+                            {{ next_token.token_number }}
+                        </div>
+                        
+                        <div class="next-token-info mt-3">
+                            <div class="info-row">
+                                <span class="info-label">Service:</span>
+                                <span class="info-value">{{ next_token.queue.service_type }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Priority:</span>
+                                <span class="info-value">
+                                    <span class="badge badge-{{ next_token.priority_class }}">
+                                        {{ next_token.get_priority_display }}
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Wait Time:</span>
+                                <span class="info-value">{{ next_token.current_wait_time|default:"--" }} min</span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-info" id="callNextBtn" data-token-id="{{ next_token.id }}">
+                                <i class="fas fa-arrow-down me-2"></i>Call Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Efficiency Meter & Counter Load (Right) -->
+        <div class="col-lg-5 mb-4">
+            <!-- Real-Time Efficiency Meter -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>Your Efficiency</h5>
+                </div>
+                <div class="card-body">
+                    <div class="efficiency-meter">
+                        <!-- Circular Progress -->
+                        <div class="efficiency-circle">
+                            <svg class="efficiency-svg" width="200" height="200" viewBox="0 0 200 200">
+                                <circle cx="100" cy="100" r="90" fill="none" stroke="#e9ecef" stroke-width="8" />
+                                <circle class="efficiency-progress" cx="100" cy="100" r="90" fill="none" 
+                                        stroke="#198754" stroke-width="8" stroke-linecap="round"
+                                        stroke-dasharray="{{ efficiency_percentage }} 314" />
+                            </svg>
+                            <div class="efficiency-text">
+                                <span class="efficiency-percent">{{ efficiency_percentage|default:0 }}%</span>
+                                <span class="efficiency-label">Efficiency</span>
+                            </div>
+                        </div>
+
+                        <div class="efficiency-stats mt-4">
+                            <div class="stat-box">
+                                <p class="stat-label">Avg Service Time</p>
+                                <p class="stat-value">{{ avg_service_time|default:"--" }} min</p>
+                            </div>
+                            <div class="stat-box">
+                                <p class="stat-label">Tokens/Hour</p>
+                                <p class="stat-value">{{ tokens_per_hour|default:"--" }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Performance Badge -->
+                        <div class="mt-3 text-center">
+                            {% if efficiency_percentage >= 80 %}
+                            <span class="badge bg-success p-2">⭐ Excellent Performance</span>
+                            {% elif efficiency_percentage >= 60 %}
+                            <span class="badge bg-info p-2">👍 Good Performance</span>
+                            {% else %}
+                            <span class="badge bg-warning p-2">⚠️ Needs Improvement</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counter Load Indicator -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-signal me-2"></i>Counter Load Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="load-indicator">
+                        <!-- Load Bar -->
+                        <div class="load-bar-section">
+                            <p class="load-label">Current Load</p>
+                            <div class="progress-section">
+                                <div class="progress" style="height: 30px;">
+                                    <div class="progress-bar progress-bar-{{ counter_load_class }}" 
+                                         style="width: {{ counter_load_percentage }}%; font-weight: 600;">
+                                        {{ counter_load_percentage }}%
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="load-status mt-2">
+                                <i class="fas fa-{{ counter_status_icon }}"></i>
+                                {{ counter_load_status }}
+                            </p>
+                        </div>
+
+                        <!-- Queue Status -->
+                        <div class="queue-status-section mt-4 pt-4 border-top">
+                            <p class="load-label">Queue Status</p>
+                            <div class="status-list">
+                                {% for queue in queue_statuses %}
+                                <div class="status-item">
+                                    <span class="status-name">{{ queue.service_type }}</span>
+                                    <span class="badge bg-{{ queue.status_color }}">{{ queue.waiting_count }} waiting</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Recommendations -->
+                        {% if counter_load_percentage > 80 %}
+                        <div class="alert alert-warning mt-4 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>High Load!</strong> Consider calling counter assistance.
+                        </div>
+                        {% elif counter_load_percentage < 30 %}
+                        <div class="alert alert-info mt-4 mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Low Load:</strong> Great opportunity to catch up on break.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Performance -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Today's Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="performance-stats">
+                        <div class="perf-stat-item">
+                            <span class="perf-stat-label">Total Served</span>
+                            <span class="perf-stat-value">{{ tokens_served_today }}</span>
+                        </div>
+                        <div class="perf-stat-item">
+                            <span class="perf-stat-label">Skip Rate</span>
+                            <span class="perf-stat-value">{{ skip_rate|default:"0" }}%</span>
+                        </div>
+                        <div class="perf-stat-item">
+                            <span class="perf-stat-label">Satisfaction</span>
+                            <span class="perf-stat-value">{{ satisfaction_rating|default:"N/A" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call Next Token Modal -->
+<div class="modal fade" id="callNextModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-arrow-down me-2"></i>Select Queue</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Which queue would you like to call from?</p>
+                <div id="queueSelection">
+                    {% for queue in available_queues %}
+                    <button type="button" class="btn btn-outline-primary btn-block mb-2 text-start call-queue-btn" 
+                            data-queue-id="{{ queue.id }}" style="display: block; width: 100%; text-align: left;">
+                        <div>
+                            <strong>{{ queue.service_type }}</strong>
+                            <span class="badge bg-info float-end">{{ queue.waiting_count }} waiting</span>
+                        </div>
+                        <small class="text-muted">Avg wait: {{ queue.average_wait_time|default:"--" }} min</small>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Token Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Transfer Token</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Transfer token #<strong id="transferTokenNum"></strong> to which counter?</p>
+                <select class="form-select" id="transferCounterSelect">
+                    <option>-- Select counter --</option>
+                    {% for counter in other_counters %}
+                    <option value="{{ counter.id }}">{{ counter.counter_id }} - {{ counter.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirmTransferBtn">
+                    <i class="fas fa-exchange-alt me-2"></i>Transfer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.serving-token-display {
+    text-align: center;
+}
+
+.token-circle {
+    width: 180px;
+    height: 180px;
+    background: linear-gradient(135deg, #198754 0%, #157347 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3);
+}
+
+.serving-info, .next-token-info {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.info-row, .next-token-info .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.info-value {
+    color: #212529;
+    font-weight: 600;
+}
+
+.next-token-preview {
+    text-align: center;
+}
+
+.next-token-number {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0c63e4 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+/* Efficiency Meter */
+.efficiency-meter {
+    text-align: center;
+}
+
+.efficiency-circle {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto;
+}
+
+.efficiency-svg {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.efficiency-progress {
+    transition: stroke-dasharray 0.5s ease;
+}
+
+.efficiency-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.efficiency-percent {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #198754;
+}
+
+.efficiency-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.efficiency-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.stat-box {
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+/* Counter Load */
+.load-indicator {
+    padding: 1rem;
+}
+
+.load-bar-section, .queue-status-section {
+    padding: 0;
+}
+
+.load-label {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 1rem;
+}
+
+.load-status {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.progress-bar-optimal {
+    background-color: #198754;
+}
+
+.progress-bar-normal {
+    background-color: #0dcaf0;
+}
+
+.progress-bar-high {
+    background-color: #ffc107;
+}
+
+.progress-bar-critical {
+    background-color: #dc3545;
+}
+
+.status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.status-name {
+    font-weight: 500;
+}
+
+/* Performance Stats */
+.performance-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.perf-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #0d6efd;
+}
+
+.perf-stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.perf-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+/* Dark mode */
+[data-bs-theme="dark"] .serving-info,
+[data-bs-theme="dark"] .next-token-info,
+[data-bs-theme="dark"] .stat-box,
+[data-bs-theme="dark"] .status-item,
+[data-bs-theme="dark"] .perf-stat-item {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .info-label,
+[data-bs-theme="dark"] .load-label,
+[data-bs-theme="dark"] .perf-stat-label {
+    color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .status-name {
+    color: #e0e0e0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Service Timer
+    let serviceSeconds = 0;
+    const serviceTimer = document.getElementById('serviceTimer');
+    
+    setInterval(() => {
+        if (document.querySelector('.serving-token-display')) {
+            serviceSeconds++;
+            const mins = Math.floor(serviceSeconds / 60);
+            const secs = serviceSeconds % 60;
+            const display = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+            if (serviceTimer) serviceTimer.textContent = display;
+        }
+    }, 1000);
+
+    // Complete Service Button
+    document.getElementById('completeServiceBtn')?.addEventListener('click', function() {
+        fetch('/api/token/{{ serving_token.id }}/complete/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                notificationsManager?.showToast('Success', 'Service completed', 'success');
+                setTimeout(() => location.reload(), 1000);
+            }
+        });
+    });
+
+    // Call Next Button
+    document.getElementById('callNextBtn')?.addEventListener('click', function() {
+        const tokenId = this.dataset.tokenId;
+        fetch(`/api/token/${tokenId}/call/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                notificationsManager?.showToast('Called', 'Token called', 'success');
+                setTimeout(() => location.reload(), 1000);
+            }
+        });
+    });
+
+    // Transfer Button
+    document.getElementById('transferTokenBtn')?.addEventListener('click', function() {
+        document.getElementById('transferTokenNum').textContent = '{{ serving_token.token_number }}';
+        new bootstrap.Modal(document.getElementById('transferModal')).show();
+    });
+
+    // Call Queue Buttons
+    document.querySelectorAll('.call-queue-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const queueId = this.dataset.queueId;
+            fetch(`/api/queue/${queueId}/call-next/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('callNextModal')).hide();
+                    setTimeout(() => location.reload(), 500);
+                }
+            });
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(c.substring(name.length + 1));
+                }
+            });
+        }
+        return cookieValue;
+    }
+
+    // Auto-refresh every 10 seconds
+    setInterval(() => {
+        location.reload();
+    }, 10000);
+});
+</script>
+{% endblock %}
