@@ -5,6 +5,25 @@ __pycache__/
 
 # C extensions
 *.so
+# Python
+__pycache__/
+*.pyc
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Virtual environment
+venv/
+env/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
 
 
 # Distribution / packaging
