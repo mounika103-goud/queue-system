@@ -16,6 +16,7 @@ urlpatterns = [
     # Customer URLs
     path('dashboard/customer/', views.customer_dashboard, name='customer_dashboard'),
     path('customer/get-token/', views.get_token, name='get_token'),
+    path('customer/generate-token-ajax/', views.generate_token_ajax, name='generate_token_ajax'),
     path('customer/token/<str:token_id>/', views.token_status, name='token_status'),
     path('customer/history/', views.customer_history, name='customer_history'),
     

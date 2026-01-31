@@ -37,7 +37,8 @@ class QueueAnalyticsAdmin(admin.ModelAdmin):
     list_display = ['date', 'queue', 'total_tokens', 'served_tokens', 'avg_wait_time']
     list_filter = ['date', 'queue']
     search_fields = ['queue__queue_id']
-    readonly_fields = ['date']
+    fields = ['date', 'queue', 'total_tokens', 'served_tokens', 'cancelled_tokens', 
+              'no_show_tokens', 'avg_wait_time', 'avg_service_time', 'peak_hour']
 
 
 @admin.register(Notification)

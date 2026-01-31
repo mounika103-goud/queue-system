@@ -88,7 +88,7 @@ class Queue(models.Model):
         unique_together = ('counter', 'service_type')
     
     def __str__(self):
-        return f"{self.service_type} - {self.counter.counter_name}"
+        return f"{self.service_type} - {self.counter.counter_id}"
 
 
 class Token(models.Model):
@@ -106,8 +106,7 @@ class Token(models.Model):
     PRIORITY_LEVELS = [
         (1, 'Normal'),
         (2, 'Senior Citizen/PWD'),
-        (3, 'VIP'),
-        (4, 'Emergency'),
+        (3, 'Emergency'),
     ]
     
     token_number = models.CharField(max_length=50, unique=True)
@@ -165,7 +164,7 @@ class Token(models.Model):
 
 class QueueAnalytics(models.Model):
     """Store analytics data for reporting and insights"""
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField()
     queue = models.ForeignKey(Queue, on_delete=models.CASCADE, related_name='analytics')
     
     total_tokens = models.IntegerField(default=0)

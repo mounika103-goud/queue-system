@@ -4,7 +4,7 @@
 {% block title %}Staff Dashboard - Queue Manager{% endblock %}
 
 {% block content %}
-<div class="container-fluid page-wrapper">
+<div class="container-fluid page-wrapper" data-dashboard-type="staff" data-counter-id="{{ counter_id }}"
     <!-- Page Header -->
     <div class="page-header mb-4">
         <div class="row align-items-center">
@@ -26,8 +26,17 @@
             <div class="card card-left-border info shadow-sm hover-lift">
                 <div class="card-body">
                     <p class="text-muted small mb-1">Tokens Served Today</p>
-                    <h4 class="mb-0">{{ tokens_served_today }}</h4>
-                    <small class="text-muted">+{{ tokens_served_increase }}% from yesterday</small>
+                    <h4 class="mb-0" id="tokens-today">{{ tokens_served_today }}</h4>
+                    <small class="text-muted">
+                        {% if tokens_served_increase > 0 %}
+                            <span class="text-success">+{{ tokens_served_increase }}%</span>
+                        {% elif tokens_served_increase < 0 %}
+                            <span class="text-danger">{{ tokens_served_increase }}%</span>
+                        {% else %}
+                            Same as yesterday
+                        {% endif %}
+                        from yesterday
+                    </small>
                 </div>
             </div>
         </div>
@@ -36,8 +45,8 @@
             <div class="card card-left-border success shadow-sm hover-lift">
                 <div class="card-body">
                     <p class="text-muted small mb-1">Avg Service Time</p>
-                    <h4 class="mb-0">{{ avg_service_time|default:"--" }} min</h4>
-                    <small class="text-muted">Excellent performance</small>
+                    <h4 class="mb-0" id="avg-service-time">{{ avg_service_time|default:"5" }} min</h4>
+                    <small class="text-success">Excellent performance</small>
                 </div>
             </div>
         </div>
@@ -46,8 +55,67 @@
             <div class="card card-left-border warning shadow-sm hover-lift">
                 <div class="card-body">
                     <p class="text-muted small mb-1">Waiting Customers</p>
-                    <h4 class="mb-0">{{ waiting_count }}</h4>
+                    <h4 class="mb-0" id="waiting-count">{{ waiting_count }}</h4>
                     <small class="text-muted" id="counterLoad">{{ counter_load_status }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Metrics Row -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-hourglass-half text-info"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Avg Wait Time</h6>
+                    <h3 class="mb-1" id="avg-wait-time">{{ avg_wait_time|default:"8" }} min</h3>
+                    <small class="text-muted">Today's avg</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-percent text-success"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Counter Efficiency</h6>
+                    <h3 class="mb-1" id="efficiency-percent">{{ counter_efficiency }}%</h3>
+                    <small class="text-muted">Your performance</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line text-warning"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Load Status</h6>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar {% if counter_load_percentage >= 70 %}bg-danger{% elif counter_load_percentage >= 40 %}bg-warning{% else %}bg-success{% endif %}" 
+                             style="width: {{ counter_load_percentage }}%;">
+                            <small>{{ counter_load_percentage }}%</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-users text-primary"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">System Load</h6>
+                    <h3 class="mb-1">{{ all_waiting_today }} active</h3>
+                    <small class="text-muted">All tokens today</small>
                 </div>
             </div>
         </div>
@@ -162,8 +230,41 @@
             {% endif %}
         </div>
 
-        <!-- Efficiency Meter & Counter Load (Right) -->
+        <!-- Queue Preview & Efficiency (Right) -->
         <div class="col-lg-5 mb-4">
+            <!-- Next Tokens Queue Preview -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Queue Preview (Next 5)</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if next_tokens %}
+                    <div class="list-group list-group-flush">
+                        {% for token in next_tokens %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
+                            <div>
+                                <h6 class="mb-1">
+                                    <span class="badge bg-info me-2">#{{ token.token_number }}</span>
+                                    <span class="badge badge-{{ token.priority_class }}">{{ token.get_priority_display }}</span>
+                                </h6>
+                                <small class="text-muted">{{ token.queue.service_type }}</small>
+                            </div>
+                            <div class="text-end">
+                                <small class="d-block text-muted">{{ token.generated_at|timesince }} ago</small>
+                                <small class="text-warning d-block">Waiting: {{ token.wait_duration|default:"--" }} min</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-inbox fa-2x opacity-50 mb-2 d-block"></i>
+                        <small>No customers waiting</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Real-Time Efficiency Meter -->
             <div class="card shadow-lg border-0 mb-4">
                 <div class="card-header bg-gradient-primary text-white">
@@ -177,10 +278,13 @@
                                 <circle cx="100" cy="100" r="90" fill="none" stroke="#e9ecef" stroke-width="8" />
                                 <circle class="efficiency-progress" cx="100" cy="100" r="90" fill="none" 
                                         stroke="#198754" stroke-width="8" stroke-linecap="round"
-                                        stroke-dasharray="{{ efficiency_percentage }} 314" />
+                                        stroke-dasharray="{{ counter_efficiency }} 314" />
                             </svg>
                             <div class="efficiency-text">
-                                <span class="efficiency-percent">{{ efficiency_percentage|default:0 }}%</span>
+                                <span class="efficiency-percent">{{ counter_efficiency }}%</span>
+                                <span class="efficiency-label">Efficiency</span>
+                            </div>
+                        </div>                                <span class="efficiency-percent">{{ efficiency_percentage|default:0 }}%</span>
                                 <span class="efficiency-label">Efficiency</span>
                             </div>
                         </div>
@@ -188,7 +292,7 @@
                         <div class="efficiency-stats mt-4">
                             <div class="stat-box">
                                 <p class="stat-label">Avg Service Time</p>
-                                <p class="stat-value">{{ avg_service_time|default:"--" }} min</p>
+                                <p class="stat-value">{{ avg_service_time_hours|default:"--" }} hrs</p>
                             </div>
                             <div class="stat-box">
                                 <p class="stat-label">Tokens/Hour</p>

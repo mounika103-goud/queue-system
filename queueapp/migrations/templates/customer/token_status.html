@@ -1,0 +1,318 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Token Status - Queue Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid page-wrapper">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1><i class="fas fa-ticket-alt me-2"></i>Token Status</h1>
+                <p class="text-muted">Track your token in real-time</p>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'queueapp:customer_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if token %}
+    <div class="row">
+        <!-- Token Status Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Token Information</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Token Number Large Display -->
+                    <div class="text-center mb-4">
+                        <div style="font-size: 48px; font-weight: bold; color: #0d6efd; margin: 20px 0;">
+                            {{ token.token_number }}
+                        </div>
+                        <span class="badge bg-{{ token.status_badge_class }} p-2" style="font-size: 14px;">
+                            {{ token.get_status_display }}
+                        </span>
+                    </div>
+
+                    <!-- Token Details -->
+                    <div class="detail-section">
+                        <h6 class="text-muted small mb-3">DETAILS</h6>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">Service Type:</span>
+                            <span class="detail-value">{{ token.queue.service_type|title }}</span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">Counter:</span>
+                            <span class="detail-value">
+                                {% if token.queue.counter %}
+                                    {{ token.queue.counter.name }} ({{ token.queue.counter.counter_id }})
+                                {% else %}
+                                    Not assigned yet
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <span class="detail-label">Priority:</span>
+                            <span class="detail-value">
+                                <span class="badge bg-info">{{ token.get_priority_display }}</span>
+                            </span>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-label">Generated At:</span>
+                            <span class="detail-value">{{ token.generated_at|date:"d M, Y H:i" }}</span>
+                        </div>
+
+                        {% if token.called_at %}
+                        <div class="detail-row">
+                            <span class="detail-label">Called At:</span>
+                            <span class="detail-value">{{ token.called_at|date:"d M, Y H:i" }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if token.service_started_at %}
+                        <div class="detail-row">
+                            <span class="detail-label">Service Started:</span>
+                            <span class="detail-value">{{ token.service_started_at|date:"d M, Y H:i" }}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if token.service_ended_at %}
+                        <div class="detail-row">
+                            <span class="detail-label">Service Ended:</span>
+                            <span class="detail-value">{{ token.service_ended_at|date:"d M, Y H:i" }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Duration Information -->
+                    {% if token.wait_duration %}
+                    <div class="alert alert-info mt-3 mb-0">
+                        <strong>Wait Time:</strong> {{ token.wait_duration }} minutes
+                    </div>
+                    {% endif %}
+
+                    {% if token.service_duration %}
+                    <div class="alert alert-success mt-2 mb-0">
+                        <strong>Service Time:</strong> {{ token.service_duration }} minutes
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Timeline -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Status Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <!-- Generated -->
+                        <div class="timeline-item completed">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>Token Generated</h6>
+                                <small class="text-muted">{{ token.generated_at|date:"d M, Y H:i" }}</small>
+                            </div>
+                        </div>
+
+                        <!-- Called -->
+                        <div class="timeline-item {% if token.called_at %}completed{% else %}pending{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>Token Called</h6>
+                                {% if token.called_at %}
+                                    <small class="text-muted">{{ token.called_at|date:"d M, Y H:i" }}</small>
+                                {% else %}
+                                    <small class="text-muted">Waiting to be called...</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Being Served -->
+                        <div class="timeline-item {% if token.service_started_at %}completed{% else %}pending{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>Service Started</h6>
+                                {% if token.service_started_at %}
+                                    <small class="text-muted">{{ token.service_started_at|date:"d M, Y H:i" }}</small>
+                                {% else %}
+                                    <small class="text-muted">Waiting for service...</small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Completed -->
+                        <div class="timeline-item {% if token.service_ended_at %}completed{% else %}pending{% endif %}">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h6>Service Completed</h6>
+                                {% if token.service_ended_at %}
+                                    <small class="text-muted">{{ token.service_ended_at|date:"d M, Y H:i" }}</small>
+                                {% else %}
+                                    <small class="text-muted">In progress or pending...</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Queue Status Card -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Queue Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="stat-box">
+                                <h6 class="text-muted small">Service Type</h6>
+                                <p class="stat-value">{{ token.queue.service_type|title }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-box">
+                                <h6 class="text-muted small">Queue Wait Time</h6>
+                                <p class="stat-value">{{ token.queue.current_wait_time|default:"--" }} minutes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row">
+        <div class="col-12">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'queueapp:customer_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelTokenModal">
+                    <i class="fas fa-times me-2"></i>Cancel Token
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <strong>Token Not Found</strong>
+        <p class="mb-0">The token you're looking for doesn't exist or has been deleted.</p>
+    </div>
+    <a href="{% url 'queueapp:customer_dashboard' %}" class="btn btn-primary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+    {% endif %}
+</div>
+
+<style>
+.detail-section {
+    padding: 15px 0;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.detail-value {
+    color: #212529;
+    font-weight: 500;
+}
+
+.stat-box {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0d6efd;
+    margin: 0;
+}
+
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    display: flex;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-marker {
+    width: 24px;
+    height: 24px;
+    background: #e9ecef;
+    border-radius: 50%;
+    position: relative;
+    margin-right: 20px;
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.timeline-item.completed .timeline-marker {
+    background: #198754;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #198754;
+}
+
+.timeline-item.pending .timeline-marker {
+    background: #cfe2ff;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #cfe2ff;
+}
+
+.timeline-content h6 {
+    margin: 0 0 5px 0;
+    font-weight: 600;
+}
+
+.timeline-content small {
+    display: block;
+    font-size: 12px;
+}
+
+.badge {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+</style>
+{% endblock %}

@@ -3,13 +3,189 @@
 
 {% block title %}Customer Dashboard - Queue Manager{% endblock %}
 
-{% block content %}
-<div class="container-fluid page-wrapper">
+{% block extra_js %}
+<style>
+    .border-left-success { border-left: 4px solid #28a745 !important; }
+    .border-left-info { border-left: 4px solid #17a2b8 !important; }
+    .border-left-warning { border-left: 4px solid #ffc107 !important; }
+</style>
+<script>
+// Live timer for elapsed time
+function updateLiveTimer() {
+    const genTime = new Date('{{ current_token.generated_at|date:"c" }}');
+    const now = new Date();
+    const elapsedSeconds = Math.floor((now - genTime) / 1000);
+    
+    const mins = Math.floor(elapsedSeconds / 60);
+    const secs = elapsedSeconds % 60;
+    
+    const timerEl = document.getElementById('liveTimer');
+    if (timerEl) {
+        if (mins > 0) {
+            timerEl.textContent = mins + 'm ' + secs + 's';
+        } else {
+            timerEl.textContent = secs + 's';
+        }
+    }
+}
+
+if (document.getElementById('liveTimer')) {
+    updateLiveTimer();
+    setInterval(updateLiveTimer, 1000);
+}
+
+// Handle queue selection to show live info
+document.addEventListener('DOMContentLoaded', function() {
+    const queueSelect = document.getElementById('queueSelect');
+    const queueInfoDisplay = document.getElementById('queueInfoDisplay');
+    
+    if (queueSelect) {
+        queueSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            
+            if (this.value) {
+                const waitTime = selectedOption.getAttribute('data-wait') || '8';
+                const waitingCount = selectedOption.getAttribute('data-waiting') || '0';
+                
+                // Show queue info
+                queueInfoDisplay.style.display = 'block';
+                document.getElementById('queueWaiting').textContent = waitingCount;
+                document.getElementById('queueWaitTime').textContent = waitTime + ' min';
+                
+                // Determine queue status
+                let status = 'Available';
+                let statusClass = 'text-success';
+                
+                if (parseInt(waitingCount) > 10) {
+                    status = 'Busy';
+                    statusClass = 'text-danger';
+                } else if (parseInt(waitingCount) > 5) {
+                    status = 'Moderate';
+                    statusClass = 'text-warning';
+                }
+                
+                const statusElement = document.getElementById('queueStatus');
+                statusElement.textContent = status;
+                statusElement.className = statusClass + ' mb-0';
+                
+                // Add animation
+                queueInfoDisplay.classList.add('fade-in');
+            } else {
+                queueInfoDisplay.style.display = 'none';
+            }
+        });
+    }
+    
+    // Handle token generation form submission
+    const tokenForm = document.getElementById('tokenGenerationForm');
+    if (tokenForm) {
+        tokenForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const btn = document.getElementById('generateTokenBtn');
+            const btnText = document.getElementById('btnText');
+            const messagesDiv = document.getElementById('tokenFormMessages');
+            
+            // Disable button and show loading state
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><span id="btnText">Generating Token...</span>';
+            messagesDiv.innerHTML = '';
+            
+            // Send AJAX request
+            const url = '{% url "queueapp:generate_token_ajax" %}';
+            console.log('Submitting to:', url);
+            console.log('Form data:', Object.fromEntries(formData));
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    messagesDiv.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong><i class="fas fa-check-circle me-2"></i>Success!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    
+                    // Reset form
+                    tokenForm.reset();
+                    
+                    // Show token details
+                    setTimeout(() => {
+                        messagesDiv.innerHTML += `
+                            <div class="alert alert-info">
+                                <h6>Your Token Details:</h6>
+                                <p class="mb-0"><strong>Token Number:</strong> ${data.token_number}</p>
+                                <p class="mb-0"><strong>Queue:</strong> ${data.queue_name}</p>
+                                <p class="mb-0"><strong>Estimated Wait:</strong> ${data.estimated_wait} minutes</p>
+                            </div>
+                        `;
+                    }, 500);
+                    
+                    // Redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 3000);
+                } else {
+                    // Show error message
+                    messagesDiv.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong><i class="fas fa-exclamation-circle me-2"></i>Error!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    
+                    // Re-enable button
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-plus me-2"></i><span id="btnText">Generate Token Now</span>';
+                }
+            })
+            .catch(error => {
+                messagesDiv.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong><i class="fas fa-times-circle me-2"></i>Error!</strong> ${error.message || 'An error occurred while generating the token'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                
+                // Re-enable button
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus me-2"></i><span id="btnText">Generate Token Now</span>';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
     <!-- Page Header -->
     <div class="page-header mb-4">
         <h1><i class="fas fa-user me-2"></i>Customer Dashboard</h1>
         <p class="text-muted">Welcome, {{ user.get_full_name|default:user.username }}</p>
     </div>
+
+    <!-- Debug Info (Show if no current token visible) -->
+    {% if not current_token and not available_queues %}
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Status:</strong> No active token. Ready to book a new one! Scroll down to find the token booking form.
+    </div>
+    {% elif current_token %}
+    <div class="alert alert-warning mb-4">
+        <i class="fas fa-ticket-alt me-2"></i>
+        <strong>Current Token:</strong> You have an active token (#{{ current_token.token_number }}). Scroll down to view details or cancel it to book a new token.
+    </div>
+    {% endif %}
 
     <!-- Quick Stats Row -->
     <div class="row mb-4">
@@ -20,6 +196,7 @@
                         <div>
                             <p class="text-muted small mb-1">Total Tokens</p>
                             <h4 class="mb-0">{{ total_tokens }}</h4>
+                            <small class="text-success">{{ completed_today }} completed today</small>
                         </div>
                         <i class="fas fa-ticket-alt fa-3x opacity-25"></i>
                     </div>
@@ -32,8 +209,9 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted small mb-1">Completed</p>
+                            <p class="text-muted small mb-1">Completed All Time</p>
                             <h4 class="mb-0">{{ completed_tokens }}</h4>
+                            <small class="text-info">Success rate</small>
                         </div>
                         <i class="fas fa-check-circle fa-3x opacity-25"></i>
                     </div>
@@ -47,7 +225,8 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <p class="text-muted small mb-1">Avg Wait Time</p>
-                            <h4 class="mb-0">{{ avg_wait_time|default:"--" }} min</h4>
+                            <h4 class="mb-0">{{ avg_wait_time }} min</h4>
+                            <small class="text-warning">Your average</small>
                         </div>
                         <i class="fas fa-hourglass-half fa-3x opacity-25"></i>
                     </div>
@@ -60,8 +239,9 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <p class="text-muted small mb-1">Total Time Saved</p>
-                            <h4 class="mb-0">{{ time_saved|default:"--" }} min</h4>
+                            <p class="text-muted small mb-1">Time Saved</p>
+                            <h4 class="mb-0">{{ time_saved }} min</h4>
+                            <small class="text-primary">vs. estimated wait</small>
                         </div>
                         <i class="fas fa-tachometer-alt fa-3x opacity-25"></i>
                     </div>
@@ -70,230 +250,322 @@
         </div>
     </div>
 
-    <!-- Main Content Row -->
-    <div class="row">
-        <!-- Active Token Section (Left) -->
-        <div class="col-lg-6 mb-4">
-            {% if current_token %}
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>Your Current Token</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Large Token Number Display -->
-                    <div class="text-center mb-4">
-                        <div class="token-display-large animate-pulse">
-                            <span class="token-number">{{ current_token.token_number }}</span>
-                        </div>
-                        <div class="mt-2">
-                            <span class="badge" style="background-color: {{ current_token.status_color }}; font-size: 1.1rem;">
-                                {{ current_token.get_status_display }}
-                            </span>
-                        </div>
+    <!-- System Wide Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-users text-success"></i>
                     </div>
-
-                    <!-- Status Cards -->
-                    <div class="row text-center mb-4">
-                        <div class="col-6 border-end">
-                            <p class="text-muted small mb-1">People Ahead</p>
-                            <div class="counter-value">{{ people_ahead|default:0 }}</div>
-                        </div>
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Est. Wait Time</p>
-                            <div class="counter-value text-success">{{ estimated_wait|default:"--" }} min</div>
-                        </div>
-                    </div>
-
-                    <!-- Animated Waiting Timer -->
-                    <div class="waiting-timer mb-4">
-                        <div class="timer-circle mx-auto">
-                            <span id="waitingTimer" class="timer-text">
-                                {{ current_token.wait_duration|default:"0" }}s
-                            </span>
-                        </div>
-                        <p class="text-center text-muted small mt-2">Time elapsed since generation</p>
-                    </div>
-
-                    <!-- Progress Bar -->
-                    <div class="mb-3">
-                        <p class="small text-muted mb-2">Queue Progress</p>
-                        <div class="progress progress-animated" style="height: 25px;">
-                            <div class="progress-bar bg-success progress-bar-striped" 
-                                 id="queueProgress" 
-                                 role="progressbar" 
-                                 style="width: {{ progress_percentage|default:0 }}%">
-                                <span class="progress-text">{{ progress_percentage|default:0 }}%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Token Details -->
-                    <div class="token-details">
-                        <div class="detail-row">
-                            <span class="detail-label">Service Type:</span>
-                            <span class="detail-value">{{ current_token.queue.service_type }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Counter:</span>
-                            <span class="detail-value">{{ current_token.served_by.counter_id|default:"Awaiting assignment" }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Priority:</span>
-                            <span class="detail-value">
-                                <span class="badge badge-{{ current_token.priority_class }}">
-                                    {{ current_token.get_priority_display }}
-                                </span>
-                            </span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Generated:</span>
-                            <span class="detail-value time-ago" data-time="{{ current_token.created_at|date:'c' }}">
-                                {{ current_token.created_at|timesince }} ago
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-grid gap-2 mt-4">
-                        <a href="/customer/token-status/" class="btn btn-primary btn-lg">
-                            <i class="fas fa-search me-2"></i>View Full Status
-                        </a>
-                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelTokenModal">
-                            <i class="fas fa-times me-2"></i>Cancel Token
-                        </button>
-                    </div>
+                    <h6 class=\"mt-2 mb-1\">Queue Statistics</h6>
+                    <h3 class=\"mb-1\">{{ all_tokens_today }}<span class=\"small\"> today</span></h3>
+                    <small class=\"text-muted\">System wide</small>
                 </div>
             </div>
-            {% else %}
-            <div class="card shadow-lg border-0">
-                <div class="card-body text-center py-5">
-                    <i class="fas fa-inbox fa-4x text-muted mb-3 opacity-50"></i>
-                    <h5>No Active Token</h5>
-                    <p class="text-muted mb-3">Generate a token to see real-time updates</p>
-                    <a href="/customer/get-token/" class="btn btn-primary btn-lg">
-                        <i class="fas fa-ticket-alt me-2"></i>Generate Token Now
-                    </a>
-                </div>
-            </div>
-            {% endif %}
         </div>
 
-        <!-- Insights & Suggestions (Right) -->
-        <div class="col-lg-6 mb-4">
-            <!-- Best Time to Visit -->
-            <div class="card shadow-lg border-0 mb-4 card-gradient-primary">
-                <div class="card-header bg-gradient-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Smart Suggestion</h5>
-                </div>
-                <div class="card-body">
-                    <div class="suggestion-box">
-                        <div class="suggestion-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="suggestion-content">
-                            <h6>Best Time to Visit Next</h6>
-                            <p id="bestTimeSuggestion" class="mb-0">
-                                {{ best_time_suggestion|default:"Loading analysis..." }}
-                            </p>
-                            <small class="text-muted mt-2 d-block">
-                                Based on historical queue patterns
-                            </small>
-                        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-percent text-info"></i>
                     </div>
+                    <h6 class="mt-2 mb-1">System Efficiency</h6>
+                    <h3 class="mb-1">{{ system_efficiency }}%</h3>
+                    <small class="text-muted">Completed today</small>
                 </div>
             </div>
+        </div>
 
-            <!-- Queue Status Overview -->
-            <div class="card shadow-lg border-0 mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Queue Overview</h5>
-                </div>
-                <div class="card-body">
-                    <div id="queuesList" class="queues-list">
-                        <!-- Dynamically populated -->
-                        {% for queue in available_queues %}
-                        <div class="queue-item">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="queue-service">{{ queue.service_type }}</span>
-                                <span class="badge bg-info">{{ queue.waiting_count }} waiting</span>
-                            </div>
-                            <div class="queue-stats">
-                                <small class="text-muted">
-                                    <i class="fas fa-hourglass-half"></i> 
-                                    Avg wait: {{ queue.average_wait_time|default:"--" }} min
-                                </small>
-                            </div>
-                            <div class="queue-bar mt-2">
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar" style="width: {{ queue.congestion_percent|default:0 }}%; background-color: {{ queue.congestion_color }};"></div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-tachometer-alt text-success"></i>
                     </div>
+                    <h6 class="mt-2 mb-1">Avg Completion</h6>
+                    <h3 class="mb-1">{{ avg_completion_time }} <span class="small">min</span></h3>
+                    <small class="text-muted">Your tokens</small>
                 </div>
             </div>
+        </div>
 
-            <!-- Recent Activity -->
-            <div class="card shadow-lg border-0">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-double text-primary"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Your Completion Rate</h6>
+                    <h3 class="mb-1">{{ queue_efficiency }}%</h3>
+                    <small class="text-muted">Success rate</small>
                 </div>
-                <div class="card-body">
-                    <div id="recentActivity" class="activity-list">
-                        {% for token in recent_tokens %}
-                        <div class="activity-item">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <p class="mb-1">
-                                        <strong>Token #{{ token.token_number }}</strong>
-                                        <span class="badge" style="background-color: {{ token.status_color }};">
-                                            {{ token.get_status_display }}
-                                        </span>
-                                    </p>
-                                    <small class="text-muted">{{ token.queue.service_type }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-muted d-block">
-                                        <i class="fas fa-hourglass-half"></i> {{ token.wait_duration|default:"--" }}s
-                                    </small>
-                                    <small class="text-muted">{{ token.created_at|date:"M d, H:i" }}</small>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock text-danger"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Avg Queue Time</h6>
+                    <h3 class="mb-1">{{ avg_wait_time|default:"8" }} <span class="small">min</span></h3>
+                    <small class="text-muted">Your average</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-hourglass-end text-info"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Peak Hour Wait</h6>
+                    <h3 class="mb-1">{{ peak_hour_wait|default:"12" }} <span class="small">min</span></h3>
+                    <small class="text-muted">Busiest period</small>
+                </div>
+            </div>
+        </div>
+                    <h6 class="mt-2 mb-1">Your Success Rate</h6>
+                    <h3 class="mb-1">{% if total_tokens > 0 %}{{ completed_tokens|add:"0"|mul:100|div:total_tokens|floatformat:0 }}%{% else %}--{% endif %}</h3>
+                    <small class="text-muted">Overall completion</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card shadow-sm hover-lift">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock text-primary"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Expected Wait</h6>
+                    <h3 class="mb-1">
+                        ~{{ expected_wait_time }} min
+                    </h3>
+                    <small class="text-muted">Current position</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Always-Visible Quick Book Token Button -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-primary border-3 py-3 px-4" style="border-left: 5px solid #0d6efd;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1"><i class="fas fa-bookmark me-2"></i>Quick Token Booking</h5>
+                        <p class="mb-0 text-muted small">Jump to the token booking form or view your booking history</p>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <a href="#tokenBookingForm" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus-circle me-2"></i>Book Token
+                        </a>
+                        <a href="{% url 'queueapp:customer_history' %}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-history me-2"></i>History
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+    <!-- Token Generator - Always Visible -->
+    <div class="row mb-4" id="tokenBookingForm">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 border-top border-success border-4">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>🎫 Token Generator</h5>
+                        {% if current_token %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-info-circle me-1"></i>You have an active token
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if current_token %}
+                    <!-- Info message when user has active token -->
+                    <div class="alert alert-info border-0 mb-3">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle fa-2x me-3"></i>
+                            <div>
+                                <strong>Active Token: #{{ current_token.token_number }}</strong>
+                                <p class="mb-0 small">You can generate additional tokens for different services while your current token is active.</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Form Messages -->
+                    <div id="tokenFormMessages"></div>
+                    
+                    <form id="tokenGenerationForm" method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="queueSelect" class="form-label fw-bold">
+                                    <i class="fas fa-list me-1 text-primary"></i>Select Queue/Service
+                                </label>
+                                <select class="form-select form-select-lg border-2" id="queueSelect" name="queue_id" required style="border-color: #e9ecef;">
+                                    <option value="">-- Choose a service --</option>
+                                    {% for queue in available_queues %}
+                                    <option value="{{ queue.queue_id }}" data-wait="{{ queue.average_wait_time|default:8 }}" data-waiting="{{ queue.waiting_count }}">
+                                        {{ queue.service_type|title }} - Est. Wait: ~{{ queue.average_wait_time|default:8 }} min ({{ queue.waiting_count }} waiting)
+                                    </option>
+                                    {% empty %}
+                                    <option value="" disabled>No active queues available</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>Select the service you need
+                                </small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="prioritySelect" class="form-label fw-bold">
+                                    <i class="fas fa-star me-1 text-warning"></i>Priority Level
+                                </label>
+                                <select class="form-select form-select-lg border-2" id="prioritySelect" name="priority" style="border-color: #e9ecef;">
+                                    <option value="1">⭐ Normal Priority</option>
+                                    <option value="2">⭐⭐ High (Senior/PWD)</option>
+                                    <option value="3">⭐⭐⭐ Urgent (Emergency)</option>
+                                </select>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Higher priority = faster service
+                                </small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="notesInput" class="form-label fw-bold">
+                                    <i class="fas fa-sticky-note me-1 text-info"></i>Notes (Optional)
+                                </label>
+                                <input type="text" class="form-control form-control-lg border-2" id="notesInput" name="notes" placeholder="e.g., Account inquiry, loan application..." style="border-color: #e9ecef;">
+                                <small class="text-muted">
+                                    <i class="fas fa-pencil-alt me-1"></i>Add any special requests
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <!-- Queue Info Display -->
+                        <div class="row mb-3" id="queueInfoDisplay" style="display: none;">
+                            <div class="col-12">
+                                <div class="alert alert-light border">
+                                    <div class="row text-center">
+                                        <div class="col-md-4">
+                                            <i class="fas fa-users text-primary fa-2x mb-2"></i>
+                                            <h6 class="mb-0">People Waiting</h6>
+                                            <h4 class="text-primary mb-0" id="queueWaiting">--</h4>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <i class="fas fa-clock text-warning fa-2x mb-2"></i>
+                                            <h6 class="mb-0">Estimated Wait</h6>
+                                            <h4 class="text-warning mb-0" id="queueWaitTime">--</h4>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <i class="fas fa-chart-line text-success fa-2x mb-2"></i>
+                                            <h6 class="mb-0">Queue Status</h6>
+                                            <h4 class="text-success mb-0" id="queueStatus">--</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success btn-lg w-100 shadow-sm pulse-button" id="generateTokenBtn" style="font-weight: 600; letter-spacing: 0.5px;">
+                                    <i class="fas fa-plus-circle me-2"></i><span id="btnText">Generate Token Now</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-center align-items-center gap-3 text-muted small">
+                                    <span><i class="fas fa-check-circle me-1 text-success"></i>Instant generation</span>
+                                    <span><i class="fas fa-bell me-1 text-info"></i>Real-time notifications</span>
+                                    <span><i class="fas fa-mobile-alt me-1 text-primary"></i>Track on mobile</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Cancel Token Modal -->
+    <!-- Live Token Generator Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-left-success">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-ticket-alt text-success fa-2x"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Your Total Tokens</h6>
+                    <h3 class="mb-1" id="total-tokens-live">{{ total_tokens }}</h3>
+                    <small class="text-muted">Generated</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-left-info">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-hourglass-half text-info fa-2x"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Tokens Completed</h6>
+                    <h3 class="mb-1" id="completed-tokens-live">{{ completed_tokens }}</h3>
+                    <small class="text-muted">All time</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-left-warning">
+                <div class="card-body text-center">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line text-warning fa-2x"></i>
+                    </div>
+                    <h6 class="mt-2 mb-1">Success Rate</h6>
+                    <h3 class="mb-1" id="success-rate-live">{{ total_tokens|add:0 }} %</h3>
+                    <small class="text-muted">Completion</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Token Modal -->
 <div class="modal fade" id="cancelTokenModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-danger">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Cancel Token</h5>
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Cancel Your Token</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to cancel token <strong>#{{ current_token.token_number }}</strong>?</p>
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> Once cancelled, you'll need to generate a new token to continue
+                </div>
+                <p class="mb-3">Are you sure you want to cancel token <strong>#{{ current_token.token_number }}</strong>?</p>
                 <div class="form-group">
-                    <label for="cancelReason">Reason (optional)</label>
+                    <label for="cancelReason" class="form-label fw-bold">Reason (optional)</label>
                     <select class="form-select" id="cancelReason">
                         <option value="">-- Select a reason --</option>
-                        <option value="no_longer_needed">No longer needed</option>
-                        <option value="changed_mind">Changed my mind</option>
-                        <option value="wait_too_long">Wait time too long</option>
-                        <option value="other">Other</option>
+                        <option value="no_longer_needed">✓ No longer needed</option>
+                        <option value="changed_mind">↩ Changed my mind</option>
+                        <option value="wait_too_long">⏳ Wait time too long</option>
+                        <option value="technical_issue">⚠ Technical issue</option>
+                        <option value="other">📝 Other</option>
                     </select>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Token</button>
                 <button type="button" class="btn btn-danger" id="confirmCancelBtn">
-                    <i class="fas fa-trash me-2"></i>Cancel Token
+                    <i class="fas fa-trash me-2"></i>Yes, Cancel Token
                 </button>
             </div>
         </div>
@@ -494,14 +766,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 1000);
 
-    // Auto-refresh dashboard every 10 seconds
-    setInterval(() => {
-        location.reload();
-    }, 10000);
-
     // Cancel token handler
     document.getElementById('confirmCancelBtn')?.addEventListener('click', function() {
         const reason = document.getElementById('cancelReason').value;
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Cancelling...';
+        
+        console.log('Attempting to cancel token with reason:', reason);
+        
         fetch('/api/token/{{ current_token.id }}/cancel/', {
             method: 'POST',
             headers: {
@@ -509,11 +782,62 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ reason: reason })
-        }).then(response => {
-            if (response.ok) {
-                notificationsManager?.showToast('Success', 'Token cancelled', 'success');
-                setTimeout(() => location.reload(), 1000);
+        })
+        .then(response => {
+            console.log('Cancel response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Cancel response data:', data);
+            
+            // Check for success - handle both response formats
+            const isSuccess = data.status === 'success' || data.success === true || data.status_code === 200;
+            
+            if (isSuccess) {
+                console.log('Token cancelled successfully');
+                
+                // Hide the modal first
+                const modalElement = document.getElementById('cancelTokenModal');
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                } else {
+                    // Try to hide by removing backdrop
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) backdrop.remove();
+                }
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                successMsg.style.zIndex = '9999';
+                successMsg.style.width = '90%';
+                successMsg.style.maxWidth = '500px';
+                successMsg.innerHTML = `
+                    <strong><i class="fas fa-check-circle me-2"></i>Success!</strong> Your token has been cancelled successfully. Loading new booking form...
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.body.appendChild(successMsg);
+                
+                // Reload page after a short delay
+                setTimeout(() => {
+                    console.log('Reloading page...');
+                    location.reload();
+                }, 2000);
+            } else {
+                // Show error
+                console.error('Cancel failed:', data);
+                const errorMsg = data.message || 'Failed to cancel token';
+                alert('Error: ' + errorMsg);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash me-2"></i>Yes, Cancel Token';
             }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('Error cancelling token: ' + error.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash me-2"></i>Yes, Cancel Token';
         });
     });
 

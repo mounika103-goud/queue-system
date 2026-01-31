@@ -1,0 +1,308 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Generate Token - Queue Manager{% endblock %}
+
+{% block extra_js %}
+<style>
+    .pulse-button {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+    
+    .pulse-button:hover {
+        animation: none;
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+    
+    .queue-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .queue-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .queue-card.selected {
+        border: 3px solid #28a745 !important;
+        background-color: #f0fff4;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle queue card selection
+    const queueCards = document.querySelectorAll('.queue-card');
+    const queueInput = document.getElementById('selectedQueue');
+    
+    queueCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            queueCards.forEach(c => c.classList.remove('selected'));
+            
+            // Add selected class to clicked card
+            this.classList.add('selected');
+            
+            // Set the hidden input value
+            const queueId = this.getAttribute('data-queue-id');
+            queueInput.value = queueId;
+            
+            // Enable the generate button
+            document.getElementById('generateBtn').disabled = false;
+        });
+    });
+    
+    // Handle form submission
+    const tokenForm = document.getElementById('tokenGenerationForm');
+    if (tokenForm) {
+        tokenForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const btn = document.getElementById('generateBtn');
+            const messagesDiv = document.getElementById('formMessages');
+            
+            // Disable button and show loading state
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating Token...';
+            messagesDiv.innerHTML = '';
+            
+            // Send AJAX request
+            const url = '{% url "queueapp:generate_token_ajax" %}';
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    messagesDiv.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong><i class="fas fa-check-circle me-2"></i>Success!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `;
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 2000);
+                } else {
+                    // Show error message
+                    messagesDiv.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong><i class="fas fa-exclamation-circle me-2"></i>Error!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `;
+                    
+                    // Re-enable button
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Generate Token';
+                }
+            })
+            .catch(error => {
+                messagesDiv.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong><i class="fas fa-times-circle me-2"></i>Error!</strong> ${error.message || 'An error occurred'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                // Re-enable button
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Generate Token';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-ticket-alt me-2"></i>Generate New Token</h1>
+                <p class="text-muted">Select a service and generate your queue token</p>
+            </div>
+            <a href="{% url 'queueapp:customer_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Form Messages -->
+    <div id="formMessages"></div>
+
+    <!-- Available Queues -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Step 1: Select a Service</h5>
+                </div>
+                <div class="card-body">
+                    {% if active_queues %}
+                    <div class="row">
+                        {% for queue in active_queues %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card queue-card shadow-sm h-100" data-queue-id="{{ queue.queue_id }}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-concierge-bell me-2 text-primary"></i>
+                                            {{ queue.service_type|title }}
+                                        </h5>
+                                        <span class="badge bg-success">Active</span>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-building me-1"></i>Counter: {{ queue.counter.name }}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="row text-center mt-3">
+                                        <div class="col-6">
+                                            <div class="border-end">
+                                                <h4 class="text-primary mb-0">{{ queue.tokens.filter.status__in|default:"0" }}</h4>
+                                                <small class="text-muted">Waiting</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <h4 class="text-warning mb-0">~{{ queue.average_service_time }} min</h4>
+                                            <small class="text-muted">Avg. Time</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3 text-center">
+                                        <small class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>Click to select
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>No Active Queues</strong> - There are currently no active queues available. Please check back later.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Token Generation Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 border-top border-success border-4">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Step 2: Configure Your Token</h5>
+                </div>
+                <div class="card-body">
+                    <form id="tokenGenerationForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" id="selectedQueue" name="queue_id" value="">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="prioritySelect" class="form-label fw-bold">
+                                    <i class="fas fa-star me-1 text-warning"></i>Priority Level
+                                </label>
+                                <select class="form-select form-select-lg" id="prioritySelect" name="priority">
+                                    <option value="1" selected>⭐ Normal Priority</option>
+                                    <option value="2">⭐⭐ High Priority (Senior Citizen/PWD)</option>
+                                    <option value="3">⭐⭐⭐ Urgent (Emergency)</option>
+                                </select>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>Higher priority tokens are served first
+                                </small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="notesInput" class="form-label fw-bold">
+                                    <i class="fas fa-sticky-note me-1 text-info"></i>Notes (Optional)
+                                </label>
+                                <input type="text" class="form-control form-control-lg" id="notesInput" name="notes" placeholder="e.g., Account inquiry, loan application...">
+                                <small class="text-muted">
+                                    <i class="fas fa-pencil-alt me-1"></i>Add any special requests or notes
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success btn-lg w-100 pulse-button" id="generateBtn" disabled>
+                                    <i class="fas fa-plus-circle me-2"></i>Generate Token
+                                </button>
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-shield-alt me-1"></i>Your token will be generated instantly and you'll receive notifications
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="row mt-4">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-bolt fa-3x text-warning mb-3"></i>
+                    <h5>Instant Generation</h5>
+                    <p class="text-muted small mb-0">Your token is generated immediately upon submission</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-bell fa-3x text-info mb-3"></i>
+                    <h5>Real-time Updates</h5>
+                    <p class="text-muted small mb-0">Get notified when your token is called</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-mobile-alt fa-3x text-success mb-3"></i>
+                    <h5>Track Anywhere</h5>
+                    <p class="text-muted small mb-0">Monitor your token status from any device</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

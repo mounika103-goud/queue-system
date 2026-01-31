@@ -1,0 +1,534 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Customer Dashboard - Queue Manager{% endblock %}
+
+{% block content %}
+<div class="container-fluid page-wrapper">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <h1><i class="fas fa-user me-2"></i>Customer Dashboard</h1>
+        <p class="text-muted">Welcome, {{ user.get_full_name|default:user.username }}</p>
+    </div>
+
+    <!-- Quick Stats Row -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card card-left-border success shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total Tokens</p>
+                            <h4 class="mb-0">{{ total_tokens }}</h4>
+                        </div>
+                        <i class="fas fa-ticket-alt fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card card-left-border info shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Completed</p>
+                            <h4 class="mb-0">{{ completed_tokens }}</h4>
+                        </div>
+                        <i class="fas fa-check-circle fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card card-left-border warning shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Avg Wait Time</p>
+                            <h4 class="mb-0">{{ avg_wait_time|default:"--" }} min</h4>
+                        </div>
+                        <i class="fas fa-hourglass-half fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card card-left-border primary shadow-sm hover-lift">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total Time Saved</p>
+                            <h4 class="mb-0">{{ time_saved|default:"--" }} min</h4>
+                        </div>
+                        <i class="fas fa-tachometer-alt fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="row">
+        <!-- Active Token Section (Left) -->
+        <div class="col-lg-6 mb-4">
+            {% if current_token %}
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>Your Current Token</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Large Token Number Display -->
+                    <div class="text-center mb-4">
+                        <div class="token-display-large animate-pulse">
+                            <span class="token-number">{{ current_token.token_number }}</span>
+                        </div>
+                        <div class="mt-2">
+                            <span class="badge" style="background-color: {{ current_token.status_color }}; font-size: 1.1rem;">
+                                {{ current_token.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Status Cards -->
+                    <div class="row text-center mb-4">
+                        <div class="col-6 border-end">
+                            <p class="text-muted small mb-1">People Ahead</p>
+                            <div class="counter-value">{{ people_ahead|default:0 }}</div>
+                        </div>
+                        <div class="col-6">
+                            <p class="text-muted small mb-1">Est. Wait Time</p>
+                            <div class="counter-value text-success">{{ estimated_wait|default:"--" }} min</div>
+                        </div>
+                    </div>
+
+                    <!-- Animated Waiting Timer -->
+                    <div class="waiting-timer mb-4">
+                        <div class="timer-circle mx-auto">
+                            <span id="waitingTimer" class="timer-text">
+                                {{ current_token.wait_duration|default:"0" }}s
+                            </span>
+                        </div>
+                        <p class="text-center text-muted small mt-2">Time elapsed since generation</p>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <p class="small text-muted mb-2">Queue Progress</p>
+                        <div class="progress progress-animated" style="height: 25px;">
+                            <div class="progress-bar bg-success progress-bar-striped" 
+                                 id="queueProgress" 
+                                 role="progressbar" 
+                                 style="width: {{ progress_percentage|default:0 }}%">
+                                <span class="progress-text">{{ progress_percentage|default:0 }}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Token Details -->
+                    <div class="token-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Service Type:</span>
+                            <span class="detail-value">{{ current_token.queue.service_type }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Counter:</span>
+                            <span class="detail-value">{{ current_token.served_by.counter_id|default:"Awaiting assignment" }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Priority:</span>
+                            <span class="detail-value">
+                                <span class="badge badge-{{ current_token.priority_class }}">
+                                    {{ current_token.get_priority_display }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Generated:</span>
+                            <span class="detail-value time-ago" data-time="{{ current_token.created_at|date:'c' }}">
+                                {{ current_token.created_at|timesince }} ago
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{% url 'queueapp:token_status' current_token.token_number %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-2"></i>View Full Status
+                        </a>
+                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelTokenModal">
+                            <i class="fas fa-times me-2"></i>Cancel Token
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow-lg border-0">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-3 opacity-50"></i>
+                    <h5>No Active Token</h5>
+                    <p class="text-muted mb-3">Generate a token to see real-time updates</p>
+                    <a href="{% url 'queueapp:get_token' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-ticket-alt me-2"></i>Generate Token Now
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Insights & Suggestions (Right) -->
+        <div class="col-lg-6 mb-4">
+            <!-- Best Time to Visit -->
+            <div class="card shadow-lg border-0 mb-4 card-gradient-primary">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Smart Suggestion</h5>
+                </div>
+                <div class="card-body">
+                    <div class="suggestion-box">
+                        <div class="suggestion-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="suggestion-content">
+                            <h6>Best Time to Visit Next</h6>
+                            <p id="bestTimeSuggestion" class="mb-0">
+                                {{ best_time_suggestion|default:"Loading analysis..." }}
+                            </p>
+                            <small class="text-muted mt-2 d-block">
+                                Based on historical queue patterns
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Queue Status Overview -->
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Queue Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div id="queuesList" class="queues-list">
+                        <!-- Dynamically populated -->
+                        {% for queue in active_queues %}
+                        <div class="queue-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="queue-service">{{ queue.service_type }}</span>
+                                <span class="badge bg-info">{{ queue.waiting_count }} waiting</span>
+                            </div>
+                            <div class="queue-stats">
+                                <small class="text-muted">
+                                    <i class="fas fa-hourglass-half"></i> 
+                                    Avg wait: {{ queue.average_wait_time|default:"--" }} min
+                                </small>
+                            </div>
+                            <div class="queue-bar mt-2">
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar" style="width: {{ queue.congestion_percent|default:0 }}%; background-color: {{ queue.congestion_color }};"></div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recentActivity" class="activity-list">
+                        {% for token in recent_tokens %}
+                        <div class="activity-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="mb-1">
+                                        <strong>Token #{{ token.token_number }}</strong>
+                                        <span class="badge" style="background-color: {{ token.status_color }};">
+                                            {{ token.get_status_display }}
+                                        </span>
+                                    </p>
+                                    <small class="text-muted">{{ token.queue.service_type }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-hourglass-half"></i> {{ token.wait_duration|default:"--" }}s
+                                    </small>
+                                    <small class="text-muted">{{ token.created_at|date:"M d, H:i" }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Token Modal -->
+<div class="modal fade" id="cancelTokenModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Cancel Token</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel token <strong>#{{ current_token.token_number }}</strong>?</p>
+                <div class="form-group">
+                    <label for="cancelReason">Reason (optional)</label>
+                    <select class="form-select" id="cancelReason">
+                        <option value="">-- Select a reason --</option>
+                        <option value="no_longer_needed">No longer needed</option>
+                        <option value="changed_mind">Changed my mind</option>
+                        <option value="wait_too_long">Wait time too long</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Token</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtn">
+                    <i class="fas fa-trash me-2"></i>Cancel Token
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.token-display-large {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    color: white;
+    padding: 3rem;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    box-shadow: 0 10px 30px rgba(13, 110, 253, 0.3);
+}
+
+.token-number {
+    font-size: 4rem;
+    font-weight: 700;
+    display: block;
+    letter-spacing: 2px;
+}
+
+.counter-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+.waiting-timer {
+    text-align: center;
+}
+
+.timer-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.timer-text {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+.progress-animated .progress-bar {
+    animation: slideRight 0.6s ease-out;
+}
+
+@keyframes slideRight {
+    from {
+        width: 0% !important;
+    }
+}
+
+.progress-text {
+    color: white;
+    font-weight: 600;
+    position: absolute;
+    width: 100%;
+    text-align: center;
+}
+
+.token-details {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #212529;
+    font-weight: 500;
+}
+
+.suggestion-box {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.suggestion-icon {
+    font-size: 2.5rem;
+    color: #fff3cd;
+}
+
+.suggestion-content h6 {
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.suggestion-content p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.queues-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.queue-item {
+    padding: 1rem;
+    border-left: 4px solid #0d6efd;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+}
+
+.queue-service {
+    font-weight: 600;
+    color: #212529;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.card-gradient-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    color: white;
+}
+
+.card-gradient-primary .card-header {
+    background: transparent !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+}
+
+/* Dark mode support */
+[data-bs-theme="dark"] .token-details,
+[data-bs-theme="dark"] .queue-item {
+    background-color: #2d2d2d;
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .detail-label,
+[data-bs-theme="dark"] .queue-service {
+    color: #adb5bd;
+}
+
+[data-bs-theme="dark"] .detail-value {
+    color: #e0e0e0;
+}
+
+[data-bs-theme="dark"] .activity-item {
+    border-color: #404040;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update waiting timer every second
+    let seconds = parseInt(document.getElementById('waitingTimer')?.textContent || '0');
+    
+    setInterval(() => {
+        seconds++;
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        const display = minutes > 0 ? `${minutes}m ${secs}s` : `${secs}s`;
+        const timer = document.getElementById('waitingTimer');
+        if (timer) {
+            timer.textContent = display;
+        }
+    }, 1000);
+
+    // Auto-refresh dashboard every 10 seconds
+    setInterval(() => {
+        location.reload();
+    }, 10000);
+
+    // Cancel token handler
+    document.getElementById('confirmCancelBtn')?.addEventListener('click', function() {
+        const reason = document.getElementById('cancelReason').value;
+        fetch('/api/token/{{ current_token.id }}/cancel/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reason: reason })
+        }).then(response => {
+            if (response.ok) {
+                notificationsManager?.showToast('Success', 'Token cancelled', 'success');
+                setTimeout(() => location.reload(), 1000);
+            }
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(c.substring(name.length + 1));
+                }
+            });
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

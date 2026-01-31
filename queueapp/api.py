@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from queueapp.models import Token, Queue, Counter
 import json
 from datetime import timedelta
@@ -27,16 +28,23 @@ def admin_required(view_func):
     return wrapper
 
 
-@login_required
+@login_required(login_url='/accounts/login/')
 @require_POST
 def cancel_token(request, token_id):
     """Cancel a token (customer)"""
     try:
-        token = Token.objects.get(id=token_id, user=request.user)
+        print(f"Cancel token request - user: {request.user}, token_id: {token_id}")
+        
+        token = Token.objects.get(id=token_id, customer=request.user)
         
         # Get reason from request
-        data = json.loads(request.body)
-        reason = data.get('reason', 'No reason provided')
+        try:
+            data = json.loads(request.body)
+            reason = data.get('reason', 'No reason provided')
+        except:
+            reason = request.POST.get('reason', 'No reason provided')
+        
+        print(f"Found token: {token}, cancelling with reason: {reason}")
         
         # Update token status
         token.status = 'cancelled'
@@ -44,18 +52,27 @@ def cancel_token(request, token_id):
         token.cancelled_at = timezone.now()
         token.save()
         
+        print(f"Token {token_id} cancelled successfully")
+        
         return JsonResponse({
             'status': 'success',
+            'success': True,
             'message': 'Token cancelled successfully'
         })
     except Token.DoesNotExist:
+        print(f"Token not found: id={token_id}, user={request.user}")
         return JsonResponse({
             'status': 'error',
+            'success': False,
             'message': 'Token not found'
         }, status=404)
     except Exception as e:
+        print(f"Error cancelling token: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'status': 'error',
+            'success': False,
             'message': str(e)
         }, status=400)
 

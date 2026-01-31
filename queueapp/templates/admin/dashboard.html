@@ -4,7 +4,7 @@
 {% block title %}Admin Dashboard - Queue Manager{% endblock %}
 
 {% block content %}
-<div class="container-fluid page-wrapper">
+<div class="container-fluid page-wrapper" data-dashboard-type="admin">
     <!-- Page Header with KPI Cards -->
     <div class="page-header mb-4">
         <div class="row align-items-center mb-3">
@@ -21,13 +21,13 @@
         <div class="row">
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="kpi-card gradient-blue shadow-sm hover-lift">
-                    <div class="kpi-icon"><i class="fas fa-users"></i></div>
+                    <div class="kpi-icon"><i class="fas fa-hourglass-start"></i></div>
                     <div class="kpi-content">
                         <p class="kpi-label">Avg Wait Time</p>
-                        <h3 class="kpi-value">{{ avg_wait_time|default:"--" }} min</h3>
+                        <h3 class="kpi-value" id="avg-wait-time">{{ avg_wait_time|default:"8" }} min</h3>
                         <span class="kpi-change {{ wait_time_trend }}">
                             <i class="fas fa-arrow-{% if wait_time_trend == 'positive' %}down{% else %}up{% endif %}"></i>
-                            {{ wait_time_change|default:"0" }}% from yesterday
+                            {{ wait_time_change }}% from yesterday
                         </span>
                     </div>
                 </div>
@@ -37,11 +37,11 @@
                 <div class="kpi-card gradient-green shadow-sm hover-lift">
                     <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
                     <div class="kpi-content">
-                        <p class="kpi-label">Tokens Processed</p>
-                        <h3 class="kpi-value">{{ tokens_processed_today }}</h3>
+                        <p class="kpi-label">Tokens Served Today</p>
+                        <h3 class="kpi-value">{{ served_today }}</h3>
                         <span class="kpi-change positive">
                             <i class="fas fa-arrow-up"></i>
-                            {{ tokens_increase|default:"0" }}% from yesterday
+                            {% if tokens_increase > 0 %}+{% endif %}{{ tokens_increase|default:"0" }}% from yesterday
                         </span>
                     </div>
                 </div>
@@ -49,13 +49,13 @@
 
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="kpi-card gradient-orange shadow-sm hover-lift">
-                    <div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="kpi-icon"><i class="fas fa-tachometer-alt"></i></div>
                     <div class="kpi-content">
-                        <p class="kpi-label">Current Queue</p>
-                        <h3 class="kpi-value">{{ total_waiting }}</h3>
-                        <span class="kpi-change {{ queue_status }}">
-                            <i class="fas fa-{% if queue_status == 'critical' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
-                            {{ queue_status|title }} Load
+                        <p class="kpi-label">Avg Service Time</p>
+                        <h3 class="kpi-value" id="avg-service-time">{{ avg_service_time|default:"5" }} min</h3>
+                        <span class="kpi-change positive">
+                            <i class="fas fa-info-circle"></i>
+                            Excellent performance
                         </span>
                     </div>
                 </div>
@@ -65,11 +65,70 @@
                 <div class="kpi-card gradient-purple shadow-sm hover-lift">
                     <div class="kpi-icon"><i class="fas fa-percent"></i></div>
                     <div class="kpi-content">
-                        <p class="kpi-label">System Health</p>
-                        <h3 class="kpi-value">{{ system_health|default:"--" }}%</h3>
-                        <span class="kpi-change {% if system_health >= 80 %}positive{% elif system_health >= 60 %}warning{% else %}negative{% endif %}">
+                        <p class="kpi-label">System Efficiency</p>
+                        <h3 class="kpi-value" id="system-efficiency">{{ system_efficiency }}%</h3>
+                        <span class="kpi-change {% if system_efficiency >= 80 %}positive{% elif system_efficiency >= 60 %}warning{% else %}negative{% endif %}">
                             <i class="fas fa-heartbeat"></i>
                             All Systems {{ system_status }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary KPI Cards -->
+        <div class="row mt-2">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="kpi-card gradient-cyan shadow-sm hover-lift">
+                    <div class="kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="kpi-content">
+                        <p class="kpi-label">Waiting Customers</p>
+                        <h3 class="kpi-value" id="total-waiting">{{ total_waiting }}</h3>
+                        <span class="kpi-change {{ queue_status }}">
+                            <i class="fas fa-{% if queue_status == 'critical' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                            {{ queue_status|title }} Load
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="kpi-card gradient-indigo shadow-sm hover-lift">
+                    <div class="kpi-icon"><i class="fas fa-user-tie"></i></div>
+                    <div class="kpi-content">
+                        <p class="kpi-label">Currently Serving</p>
+                        <h3 class="kpi-value" id="being-served">{{ being_served }}</h3>
+                        <span class="kpi-change info">
+                            <i class="fas fa-user-check"></i>
+                            {% if being_served == 0 %}No Customer Being Served{% else %}{{ being_served }} Counter{{ being_served|pluralize }}{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="kpi-card gradient-teal shadow-sm hover-lift">
+                    <div class="kpi-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    <div class="kpi-content">
+                        <p class="kpi-label">Tokens/Hour</p>
+                        <h3 class="kpi-value" id="tokens-per-hour">{{ tokens_per_hour }}</h3>
+                        <span class="kpi-change info">
+                            <i class="fas fa-chart-line"></i>
+                            Current hourly rate
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="kpi-card gradient-pink shadow-sm hover-lift">
+                    <div class="kpi-icon"><i class="fas fa-users-cog"></i></div>
+                    <div class="kpi-content">
+                        <p class="kpi-label">Active Customers</p>
+                        <h3 class="kpi-value">{{ active_customers }}</h3>
+                        <span class="kpi-change info">
+                            <i class="fas fa-user-clock"></i>
+                            In system today
                         </span>
                     </div>
                 </div>
@@ -325,6 +384,26 @@
     color: #2c3e50;
 }
 
+.gradient-cyan {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.gradient-indigo {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+}
+
+.gradient-teal {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+}
+
+.gradient-pink {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+}
+
+.gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 .kpi-icon {
     font-size: 3rem;
     opacity: 0.25;
@@ -370,6 +449,16 @@
 .kpi-change.negative {
     color: #f8d7da;
     background: rgba(239, 68, 68, 0.2);
+}
+
+.kpi-change.info {
+    color: #cfe2ff;
+    background: rgba(13, 110, 253, 0.2);
+}
+
+.kpi-change.warning {
+    color: #fff3cd;
+    background: rgba(255, 193, 7, 0.2);
 }
 
 /* Heatmap */
